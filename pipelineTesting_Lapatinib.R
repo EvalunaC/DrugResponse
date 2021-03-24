@@ -13,6 +13,11 @@ library(dplyr)
 library(caret)
 library(glmnet)
 
+drug <- "Lapatinib"
+#############################################
+######### 0. Validation Function  #########
+#############################################
+
 ### RMSE and R2 function
 eval_result<-function(preds){
   MAE <- mean(abs(trainFrame$Resp - preds))
@@ -52,18 +57,134 @@ AIC_BIC_train<-function(model){
   return(list(AIC=AIC,AICc=AICc,BIC=BIC))
 }
 
-
-######### GR paper linear Ridge
+#############################################
+######### 1. GR paper linear Ridge  #########
+#############################################
 model_GR <- linearRidge(Resp ~ ., data = trainFrame)
 preds_GR<-predict(model_GR,trainFrame)
 
 GR_result<-eval_result(preds_GR) ## RMSE=0.639 R2=0.729 R2_adj=1.01 MAE=0.499 AIC= 
 
-result_model_GR_nPC<-model_GR$df[model_GR$chosen.nPCs,]  #97
+RF_result$method <- "GR paper linear Ridge"
+RF_result$drug <- drug
+
+result_model_GR_nPC<-model_GR$df[model_GR$chosen.nPCs,]  #####97 Do we keep this? 
 #    model  variance  residual 
 #195.24401  97.75603 292.73200 
 
-summary_GRsummary(model_GR)$summaries$summary97
+summary_GRsummary(model_GR)$summaries$summary97          ##### Do we keep this? 
+
+#############################################
+########## 2.  Random Forest
+#############################################
+library(randomForest)
+
+model_RF<- randomForest(Resp~.,data=trainFrame, importance = TRUE)
+preds_RF<-predict(model_RF,trainFrame)
+
+
+RF_result<-eval_result(preds_RF) 
+RF_result$method <- "Random Forest"
+RF_result$drug <- drug
+
+cr_RF<-rfcv(trainFrame[,-1],trainFrame$Resp,cv.fold=10)  ############# wait for result. Do we keep this? 
+
+#   13542     6771     3386     1693      846      423      212      106
+#1.254577 1.250099 1.227441 1.230109 1.211373 1.229579 1.214665 1.238006
+#      53       26       13        7        3        1
+#1.256803 1.278288 1.301816 1.385227 1.441808 2.001924
+
+
+
+#############################################
+############## Principle Component Regression
+#############################################
+
+library(pls)
+
+model_pcr<-pcr(Resp~.,data=trainFrame,ncomp=3, validation = "CV", jackknife = TRUE)
+#jack.test(model_pcr, ncomp = 3)
+preds_pcr<-predict(model_pcr,trainFrame,type="response")
+
+# eval_result(preds_pcr)  #generate wrong number R2<0
+
+#cor(as.numeric(preds_pcr),brcaLap,method="spearman")
+#obsfit <- predplot(model_pcr, which = "validation")  ############# Do we need this?
+#Residuals <- obsfit[,1] - obsfit[,2]                 ############# Do we need this?
+
+RMSE_pcr <- sqrt(mean(residuals(model_pcr)^2))
+R_square_pcr <- R2(model_pcr)$val[4] # unadjusted R2 with 3 components.
+
+#R2adj<-1-((1-R_square_pcr)*(nrow(trainFrame)-1)/(nrow(trainFrame)-(ncol(trainFrame)-1)-1)) ############# After adj >1.
+
+PCR_result <- data.frame(method = "Principle Component Regression", drug = drug, RMSE=as.numeric(RMSE_pcr),R_Square = as.numeric(R_square_pcr))
+
+
+#############################################
+##############   Partial Least Square
+#############################################
+model_plsr<-plsr(Resp~.,data=trainFrame, ncomp=3, validation="CV",jackknife=TRUE)
+#jack.test(model_plsr,ncomp=3)
+preds_plsr<-predict(model_plsr,trainFrame,type="response")
+
+
+RMSE_plsr <- sqrt(mean(residuals(model_plsr)^2))
+R_square_plsr <- R2(model_plsr)$val[4]
+# eval_result(preds_plsr)  #generate wrong number R2<0
+#rmsep_plsr <- sqrt(mean((trainFrame$Resp - preds_plsr)^2)) ##0.9489
+PLSR_result <- data.frame(method = "Partial Least Square", drug = drug, RMSE=as.numeric(RMSE_plsr),R_Square = as.numeric(R_square_plsr))
+
+
+
+
+#############################################
+############ Ridge GLM penalty alpha=0
+#############################################
+ #without penalty: alpha=0 (Risge Penalty) 
+cv_output_0 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=0,type.measure="mse",nfolds=10)
+(best_lam_0 <- cv_output_0$lambda.min) ###104.2796                             ########################### Evry time different. 49.54127, 47.28955, 114.4468
+model_ridgeglm<- glmnet(trainFrame[,-1],trainFrame$Resp,alpha=0, lambda=best_lam_0)  ######################Cannot run from my end.
+preds_ridgeglm <- predict(model_ridgeglm, s = best_lam_0, newx=as.matrix(trainFrame[,-1]))
+
+RidgeGLM_result <-eval_result(preds_ridgeglm) 
+RidgeGLM_result_AIC_BIC<-AIC_BIC_glmnet(model_ridgeglm)
+
+
+#############################################
+############ Lasso GLM penalty alpha=1
+#############################################
+cv_output_1 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=1,type.measure="mse",nfolds=10)
+(best_lam_1 <- cv_output_1$lambda.min) ### 0.1444154
+model_Lasso_1<- glmnet(trainFrame[,-1],trainFrame$Resp,alpha=1, lambda=best_lam_1) 
+preds_Lasso_1 <- predict(model_Lasso_1, s = best_lam_1, newx=as.matrix(trainFrame[,-1]))
+
+Lasso_result_1<-eval_result(preds_Lasso_1) 
+Lasso_result_1_AIC_BIC<-AIC_BIC_glmnet(model_Lasso_1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
  ####### Ridge model by lm.ridge ????? coef is extremely samll 
@@ -73,62 +194,15 @@ model_Ridge<-lm.ridge(Resp ~ ., data = trainFrame)
 preds_Ridge<-as.matrix(cbind(const=1,trainFrame))[,-2] %*% coef(model_Ridge)
 
 Ridge_result<-eval_result(preds_Ridge) 
+Ridge_result$method <- "Ridge model by lm.ridge"
+Ridge_result$drug <- "Lapatinib"
 
 
-############## Principle Component Regression
-library(pls)
-
-model_pcr<-pcr(Resp~.,data=trainFrame,ncomp=3, validation = "CV", jackknife = TRUE)
-#jack.test(model_pcr, ncomp = 3)
-preds_pcr<-predict(model_pcr,trainFrame,type="response")
-
-# eval_result(preds_pcr)  #generate wrong number R2<0
-rmsep_pcr <- sqrt(mean((trainFrame$Resp - preds_pcr)^2)) ##1.1897
-
-#cor(as.numeric(preds_pcr),brcaLap,method="spearman")
-obsfit <- predplot(model_pcr, which = "validation")
-Residuals <- obsfit[,1] - obsfit[,2]
 
 
-##############   Partial Least Square
-
-model_plsr<-plsr(Resp~.,data=trainFrame, ncomp=3, validation="CV",jackknife=TRUE)
-#jack.test(model_plsr,ncomp=3)
-preds_plsr<-predict(model_plsr,trainFrame,type="response")
-
-# eval_result(preds_plsr)  #generate wrong number R2<0
-rmsep_plsr <- sqrt(mean((trainFrame$Resp - preds_plsr)^2)) ##0.9489
 
 
-############ Lasso
- #without penalty: alpha=0 (Risge Penalty)
-cv_output_0 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=0,type.measure="mse",nfolds=10)
-(best_lam_0 <- cv_output_0$lambda.min) ###104.2796
-model_Lasso_0<- glmnet(trainFrame[,-1],trainFrame$Resp,alpha=0, lambda=best_lam_0) 
-preds_Lasso_0 <- predict(model_Lasso_0, s = best_lam_0, newx=as.matrix(trainFrame[,-1]))
 
-Lasso_result_0<-eval_result(preds_Lasso_0) 
-AIC_BIC_Lasso_0<-AIC_BIC_glmnet(model_Lasso_0)
-
-#without penalty: alpha=1
-cv_output_1 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=1,type.measure="mse",nfolds=10)
-(best_lam_1 <- cv_output_1$lambda.min) ### 0.1444154
-model_Lasso_1<- glmnet(trainFrame[,-1],trainFrame$Resp,alpha=1, lambda=best_lam_1) 
-preds_Lasso_1 <- predict(model_Lasso_1, s = best_lam_1, newx=as.matrix(trainFrame[,-1]))
-
-Lasso_result_1<-eval_result(preds_Lasso_1) 
-AIC_BIC_Lasso_1<-AIC_BIC_glmnet(model_Lasso_1)
-
-
-########## Random Forest
-library(randomForest)
-
-model_RF<- randomForest(Resp~.,data=trainFrame, importance = TRUE)
-preds_RF<-predict(model_RF,trainFrame)
-
-
-RF_result<-eval_result(preds_RF) 
-cr_RF<-rfcv(trainFrame[,-1],trainFrame$Resp,cv.fold=10)
 
 
 ###### SVM
@@ -169,6 +243,13 @@ preds_KNN<-predict(model_KNN,trainFrame)
 
 KNN_result<-eval_result(preds_KNN)
 result_model_KNN<-model_KNN$results
+
+
+
+
+
+
+
 
 #AIC_BIC_KNN<-AIC_BIC_train(model_KNN)
 
