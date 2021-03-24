@@ -65,8 +65,8 @@ preds_GR<-predict(model_GR,trainFrame)
 
 GR_result<-eval_result(preds_GR) ## RMSE=0.639 R2=0.729 R2_adj=1.01 MAE=0.499 AIC= 
 
-RF_result$method <- "GR paper linear Ridge"
-RF_result$drug <- drug
+GR_result$method <- "GR paper linear Ridge"
+GR_result$drug <- drug
 
 result_model_GR_nPC<-model_GR$df[model_GR$chosen.nPCs,]  #####97 Do we keep this? 
 #    model  variance  residual 
@@ -97,7 +97,7 @@ cr_RF<-rfcv(trainFrame[,-1],trainFrame$Resp,cv.fold=10)  ############# wait for 
 
 
 #############################################
-############## Principle Component Regression
+############## 3. Principle Component Regression
 #############################################
 
 library(pls)
@@ -121,7 +121,7 @@ PCR_result <- data.frame(method = "Principle Component Regression", drug = drug,
 
 
 #############################################
-##############   Partial Least Square
+##############  4. Partial Least Square
 #############################################
 model_plsr<-plsr(Resp~.,data=trainFrame, ncomp=3, validation="CV",jackknife=TRUE)
 #jack.test(model_plsr,ncomp=3)
@@ -138,7 +138,7 @@ PLSR_result <- data.frame(method = "Partial Least Square", drug = drug, RMSE=as.
 
 
 #############################################
-############ Ridge GLM penalty alpha=0
+############ 5. Ridge GLM penalty alpha=0
 #############################################
  #without penalty: alpha=0 (Risge Penalty) 
 cv_output_0 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=0,type.measure="mse",nfolds=10)
@@ -147,11 +147,13 @@ model_ridgeglm<- glmnet(trainFrame[,-1],trainFrame$Resp,alpha=0, lambda=best_lam
 preds_ridgeglm <- predict(model_ridgeglm, s = best_lam_0, newx=as.matrix(trainFrame[,-1]))
 
 RidgeGLM_result <-eval_result(preds_ridgeglm) 
-RidgeGLM_result_AIC_BIC<-AIC_BIC_glmnet(model_ridgeglm)
+RidgeGLM_result$AIC<-AIC_BIC_glmnet(model_ridgeglm)$AIC
+RidgeGLM_result$AICc<-AIC_BIC_glmnet(model_ridgeglm)$AICc
+RidgeGLM_result$BIC<-AIC_BIC_glmnet(model_ridgeglm)$BIC
 
 
 #############################################
-############ Lasso GLM penalty alpha=1
+############ 6. Lasso GLM penalty alpha=1
 #############################################
 cv_output_1 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=1,type.measure="mse",nfolds=10)
 (best_lam_1 <- cv_output_1$lambda.min) ### 0.1444154
@@ -159,15 +161,9 @@ model_Lasso_1<- glmnet(trainFrame[,-1],trainFrame$Resp,alpha=1, lambda=best_lam_
 preds_Lasso_1 <- predict(model_Lasso_1, s = best_lam_1, newx=as.matrix(trainFrame[,-1]))
 
 Lasso_result_1<-eval_result(preds_Lasso_1) 
-Lasso_result_1_AIC_BIC<-AIC_BIC_glmnet(model_Lasso_1)
-
-
-
-
-
-
-
-
+Lasso_result_1$AIC<-AIC_BIC_glmnet(model_Lasso_1)$AIC
+Lasso_result_1$AICc<-AIC_BIC_glmnet(model_Lasso_1)$AICc
+Lasso_result_1$BIC<-AIC_BIC_glmnet(model_Lasso_1)$BIC
 
 
 
@@ -235,7 +231,9 @@ EN_result<-eval_result(preds_EN) ## RMSE=0.98 R2=0.363 R2_adj=1.02 MAE=0.7977 AI
 model_EN$results$RMSE[6] ## 1.1026
 model_EN$results$Rsquared[6] ##0.2227984
 
-AIC_BIC_EN<-AIC_BIC_train(model_EN)
+model_EN$AIC<-AIC_BIC_train(model_EN)$AIC
+model_EN$AICc<-AIC_BIC_train(model_EN)$AICc
+model_EN$BIC<-AIC_BIC_train(model_EN)$BIC
 
 ######## KNN
 model_KNN<-train(Resp~.,data=trainFrame,method="knn",trControl=trainControl("cv",number=10))
@@ -244,9 +242,15 @@ preds_KNN<-predict(model_KNN,trainFrame)
 KNN_result<-eval_result(preds_KNN)
 result_model_KNN<-model_KNN$results
 
+KNN_result$method <- "K-nearest neighbors (KNN) algorithm"
+KNN_result$drug <- drug
 
 
 
+
+
+
+Result_final <- rbind(GR_result, Ridge_result,RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,SVM_result,treebag_result,model_EN,KNN_result)
 
 
 
