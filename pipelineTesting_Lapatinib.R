@@ -196,6 +196,9 @@ SVM_result<-eval_result(preds_SVM)
 SVM_result$method <- "Support vector machine regression"
 SVM_result$drug <- drug
 
+model_svm<-train(Resp~.,data=trainFrame,method = 'svmLinear2')
+
+
 
 #############################################
 ############ 9. Treebag (bootstrap aggregating) algorithm
