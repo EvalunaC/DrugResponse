@@ -196,7 +196,16 @@ SVM_result<-eval_result(preds_SVM)
 SVM_result$method <- "Support vector machine regression"
 SVM_result$drug <- drug
 
-model_svm<-train(Resp~.,data=trainFrame,method = 'svmLinear2')
+#model_svm<-train(Resp~.,data=trainFrame,method = 'svmLinear2')
+#preds_svm<-predict(model_svm,trainFrame)
+#svm_result<-eval_result(preds_svm)
+
+#svm_result$RMSE <- model_svm$results[2,2]
+#svm_result$Rsquared <- model_svm$results[2,3]
+#svm_result$MAE <- model_svm$results[2,4]
+#svm_result$RMSESD <- model_svm$results[2,5]
+#svm_result$RsquaredSD <- model_svm$results[2,6]
+#svm_result$MAESD <- model_svm$results[2,7]
 
 
 
