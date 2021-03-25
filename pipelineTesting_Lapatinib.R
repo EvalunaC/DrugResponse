@@ -95,7 +95,6 @@ cr_RF<-rfcv(trainFrame[,-1],trainFrame$Resp,cv.fold=10)  ############# wait for 
 #1.256803 1.278288 1.301816 1.385227 1.441808 2.001924
 
 
-
 #############################################
 ############## 3. Principle Component Regression
 #############################################
@@ -151,6 +150,8 @@ RidgeGLM_result$AIC<-AIC_BIC_glmnet(model_ridgeglm)$AIC
 RidgeGLM_result$AICc<-AIC_BIC_glmnet(model_ridgeglm)$AICc
 RidgeGLM_result$BIC<-AIC_BIC_glmnet(model_ridgeglm)$BIC
 
+RidgeGLM_result$method <- "Ridge GLM"
+RidgeGLM_result$drug <- drug
 
 #############################################
 ############ 6. Lasso GLM penalty alpha=1
@@ -165,77 +166,13 @@ Lasso_result_1$AIC<-AIC_BIC_glmnet(model_Lasso_1)$AIC
 Lasso_result_1$AICc<-AIC_BIC_glmnet(model_Lasso_1)$AICc
 Lasso_result_1$BIC<-AIC_BIC_glmnet(model_Lasso_1)$BIC
 
+Lasso_result_1$method <- "Lasso GLM"
+Lasso_result_1$drug <- drug
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- ####### Ridge model by lm.ridge ????? coef is extremely samll 
-
-model_Ridge<-lm.ridge(Resp ~ ., data = trainFrame)
-# Ridge_preds<-predict(model_Ridge,trainFrame)  ## Error
-preds_Ridge<-as.matrix(cbind(const=1,trainFrame))[,-2] %*% coef(model_Ridge)
-
-Ridge_result<-eval_result(preds_Ridge) 
-Ridge_result$method <- "Ridge model by lm.ridge"
-Ridge_result$drug <- "Lapatinib"
-
-
-
-
-
-
-
-
-
-###### SVM
-library(e1071)
-
-model_SVM<-svm(Resp~.,data=trainFrame)
-preds_SVM<-predict(model_SVM,trainFrame)
-
-SVM_result<-eval_result(preds_SVM)
-
-############# Treebag
-model_treebag<-train(Resp~.,data=trainFrame,method = 'treebag',trControl=trainControl("cv",number=10))
-preds_treebag<-predict(model_treebag,trainFrame)
-
-result_model_treebag<-model_treebag$results ## RMSE=1.09846, R2=0.212 MAE=0.8788
-treebag_result<-eval_result(preds_treebag)
-
-#AIC_BIC_treebag<-AIC_BIC_train(model_treebag)
-
-
-
-
-############# Elastic Net
-model_EN<-train(Resp~.,data=trainFrame,method="glmnet",trControl=trainControl("cv",number=10))
-(model_EN$bestTune)
-preds_EN<-predict(model_EN,trainFrame)
-
-EN_result<-eval_result(preds_EN) ## RMSE=0.98 R2=0.363 R2_adj=1.02 MAE=0.7977 AIC=
-
-model_EN$results$RMSE[6] ## 1.1026
-model_EN$results$Rsquared[6] ##0.2227984
-
-model_EN$AIC<-AIC_BIC_train(model_EN)$AIC
-model_EN$AICc<-AIC_BIC_train(model_EN)$AICc
-model_EN$BIC<-AIC_BIC_train(model_EN)$BIC
-
-######## KNN
+#############################################
+############ 7. K-nearest neighbors (KNN) algorithm
+#############################################
 model_KNN<-train(Resp~.,data=trainFrame,method="knn",trControl=trainControl("cv",number=10))
 preds_KNN<-predict(model_KNN,trainFrame)
 
@@ -246,16 +183,77 @@ KNN_result$method <- "K-nearest neighbors (KNN) algorithm"
 KNN_result$drug <- drug
 
 
+#############################################
+############ 8. Support vector machine regression
+#############################################
+library(e1071)
+
+model_SVM<-svm(Resp~.,data=trainFrame)
+preds_SVM<-predict(model_SVM,trainFrame)
+
+SVM_result<-eval_result(preds_SVM)
+
+SVM_result$method <- "Support vector machine regression"
+SVM_result$drug <- drug
+
+
+#############################################
+############ 9. Treebag (bootstrap aggregating) algorithm
+#############################################
+
+model_treebag<-train(Resp~.,data=trainFrame,method = 'treebag',trControl=trainControl("cv",number=10))
+preds_treebag<-predict(model_treebag,trainFrame)
+
+result_model_treebag<-model_treebag$results ## RMSE=1.09846, R2=0.212 MAE=0.8788
+treebag_result<-eval_result(preds_treebag)
+
+#AIC_BIC_treebag<-AIC_BIC_train(model_treebag)
 
 
 
+#############################################
+############ 10. Elastic Net
+#############################################
 
-Result_final <- rbind(GR_result, Ridge_result,RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,SVM_result,treebag_result,model_EN,KNN_result)
+model_EN<-train(Resp~.,data=trainFrame,method="glmnet",trControl=trainControl("cv",number=10))
+(model_EN$bestTune)
+preds_EN<-predict(model_EN,trainFrame)
 
+EN_result<-eval_result(preds_EN) ## RMSE=0.98 R2=0.363 R2_adj=1.02 MAE=0.7977 AIC=
 
+model_EN$results$RMSE[6] ## 1.1026
+model_EN$results$Rsquared[6] ##0.2227984
+
+#EN_result$AIC<-AIC_BIC_train(model_EN)$AIC
+#EN_result$AICc<-AIC_BIC_train(model_EN)$AICc
+#EN_result$BIC<-AIC_BIC_train(model_EN)$BIC
 
 
 #AIC_BIC_KNN<-AIC_BIC_train(model_KNN)
+
+
+
+
+Result_final <- rbind(GR_result, Ridge_result,RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,SVM_result,treebag_result,EN_result,KNN_result)
+
+
+
+####### Ridge model by lm.ridge ????? coef is extremely samll 
+           
+#model_Ridge0<-lm.ridge(Resp ~ ., data = trainFrame,lambda=seq(0,1,by=0.1))            
+#model_Ridge <- lm.ridge(Resp ~ ., data = trainFrame,lambda=as.numeric(names(which.min(model_Ridge0$GCV))))
+
+# Ridge_preds<-predict(model_Ridge,trainFrame)  ## Error
+#preds_Ridge<-as.matrix(cbind(const=1,trainFrame))[,-2] %*% coef(model_Ridge)
+
+#Ridge_result<-eval_result(preds_Ridge) 
+#Ridge_result$method <- "Ridge model by lm.ridge"
+#Ridge_result$drug <- "Lapatinib"
+#Ridge_result$GCVGeneralizedCVScore <- model_Ridge$GCV
+#Ridge_result$HKBestimator <- model_Ridge$kHKB
+#Ridge_result$LWBestimator <- model_Ridge$kLW
+
+
 
 #################### the following methods generate errors or taking forever
 
