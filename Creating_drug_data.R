@@ -21,6 +21,8 @@ library(mgcv)
 
 library(qrnn)
 
+getDrugData <- function(input_medication_name){
+
 setwd("/extraspace/ychen42/Drug_Response/GROrignial/dataIn/rnaSeq/BRCA.Merge_rnaseqv2")
 tpmDatMat_bc <- read.delim("BRCA.rnaseqv2_data.txt", as.is=T)
 
@@ -65,12 +67,13 @@ CCLE_train<-as.matrix(CCLE_train)
 drug_IC50_train<-as.numeric(drug_IC50_train)
 return(list(drug_IC50_train=drug_IC50_train, CCLE_train=CCLE_train))
 }
+CCLETrainData<-getCGPinfo_New(input_medication_name)
 
-CCLETrainData<-getCGPinfo_New("Lapatinib")
-CCLETrainData<-getCGPinfo_New("Vinblastine")
+#CCLETrainData<-getCGPinfo_New("Lapatinib")
+#CCLETrainData<-getCGPinfo_New("Vinblastine")
 
-"Camptothecin"
-"Vinblastine"
+#"Camptothecin"
+#"Vinblastine"
 
 trainingExprData<-CCLETrainData$CCLE_train
 trainingPtype<-CCLETrainData$drug_IC50_train
@@ -115,3 +118,5 @@ if (powerTransformPhenotype) {
 }
 
 trainFrame <- data.frame(Resp = trainingPtype, t(homData$train[keepRows,]))
+return(trainFrame)  }
+
