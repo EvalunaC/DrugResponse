@@ -265,11 +265,9 @@ print(paste(Sys.time(),"==========","10. Elastic Net Regression Complete"))
 
 #AIC_BIC_KNN<-AIC_BIC_train(model_KNN)
 
-
-
-l <- list(GR_result, RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,svm_result,treebag_result,EN_result,KNN_result)
 #l <- list(GR_result, RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,SVM_result,treebag_result,EN_result,KNN_result)
-
+l <- list(GR_result, RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,svm_result,treebag_result,EN_result,KNN_result)
+Result_final <- ldply(l, data.frame)
 df = Result_final[,c("method","drug","RMSE","R_Square","Adjusted_R2","MAE","F_stat","t_test","ks_test","AIC","AICc","BIC")]
 name <- paste("/extraspace/ychen42/Drug_Response/yiqings_work/Output/",drug,".csv", sep="",collapse = NULL)
 write.csv(df,name, quote=FALSE)
