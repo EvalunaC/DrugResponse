@@ -57,6 +57,8 @@ AIC_BIC_train<-function(model){
   return(list(AIC=AIC,AICc=AICc,BIC=BIC))
 }
 
+drug <- "Vinblastine"
+paste(Sys.time(),"==========",drug,":")
 #############################################
 ######### 1. GR paper linear Ridge  #########
 #############################################
@@ -261,7 +263,6 @@ print(paste(Sys.time(),"==========","10. Elastic Net Regression Complete"))
 #EN_result$AICc<-AIC_BIC_train(model_EN)$AICc
 #EN_result$BIC<-AIC_BIC_train(model_EN)$BIC
 
-
 #AIC_BIC_KNN<-AIC_BIC_train(model_KNN)
 
 
@@ -274,20 +275,7 @@ name <- paste("/extraspace/ychen42/Drug_Response/yiqings_work/Output/",drug,".cs
 write.csv(df,name, quote=FALSE)
 
 
-####### Ridge model by lm.ridge ????? coef is extremely samll 
-           
-#model_Ridge0<-lm.ridge(Resp ~ ., data = trainFrame,lambda=seq(0,1,by=0.1))            
-#model_Ridge <- lm.ridge(Resp ~ ., data = trainFrame,lambda=as.numeric(names(which.min(model_Ridge0$GCV))))
 
-# Ridge_preds<-predict(model_Ridge,trainFrame)  ## Error
-#preds_Ridge<-as.matrix(cbind(const=1,trainFrame))[,-2] %*% coef(model_Ridge)
-
-#Ridge_result<-eval_result(preds_Ridge) 
-#Ridge_result$method <- "Ridge model by lm.ridge"
-#Ridge_result$drug <- "Lapatinib"
-#Ridge_result$GCVGeneralizedCVScore <- model_Ridge$GCV
-#Ridge_result$HKBestimator <- model_Ridge$kHKB
-#Ridge_result$LWBestimator <- model_Ridge$kLW
 
 
 
