@@ -58,8 +58,8 @@ AIC_BIC_train<-function(model){
 }
 
 
-methods_result <- function(trainFrame, drug){
- 
+methods_result <- function(drug_data, drug){
+ trainFrame = drug_data
 
 paste(Sys.time(),"==========",drug,":")
 #############################################
