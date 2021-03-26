@@ -13,7 +13,7 @@ library(dplyr)
 library(caret)
 library(glmnet)
 
-drug <- "Lapatinib"
+#drug <- "Vinblastine"
 #############################################
 ######### 0. Validation Function  #########
 #############################################
@@ -68,11 +68,11 @@ GR_result<-eval_result(preds_GR) ## RMSE=0.639 R2=0.729 R2_adj=1.01 MAE=0.499 AI
 GR_result$method <- "GR paper linear Ridge"
 GR_result$drug <- drug
 
-result_model_GR_nPC<-model_GR$df[model_GR$chosen.nPCs,]  #####97 Do we keep this? 
+#result_model_GR_nPC<-model_GR$df[model_GR$chosen.nPCs,]  #####97 Do we keep this? 
 #    model  variance  residual 
 #195.24401  97.75603 292.73200 
 
-summary_GRsummary(model_GR)$summaries$summary97          ##### Do we keep this? 
+#summary_GRsummary(model_GR)$summaries$summary97          ##### Do we keep this? 
 
 #############################################
 ########## 2.  Random Forest
@@ -87,7 +87,7 @@ RF_result<-eval_result(preds_RF)
 RF_result$method <- "Random Forest"
 RF_result$drug <- drug
 
-cr_RF<-rfcv(trainFrame[,-1],trainFrame$Resp,cv.fold=10)  ############# wait for result. Do we keep this? 
+#cr_RF<-rfcv(trainFrame[,-1],trainFrame$Resp,cv.fold=10)  ############# wait for result. Do we keep this? 
 
 #   13542     6771     3386     1693      846      423      212      106
 #1.254577 1.250099 1.227441 1.230109 1.211373 1.229579 1.214665 1.238006
@@ -116,7 +116,7 @@ R_square_pcr <- R2(model_pcr)$val[4] # unadjusted R2 with 3 components.
 
 #R2adj<-1-((1-R_square_pcr)*(nrow(trainFrame)-1)/(nrow(trainFrame)-(ncol(trainFrame)-1)-1)) ############# After adj >1.
 
-PCR_result <- data.frame(method = "Principle Component Regression", drug = drug, RMSE=as.numeric(RMSE_pcr),R_Square = as.numeric(R_square_pcr))
+PCR_result <- list(method = "Principle Component Regression", drug = drug, RMSE=as.numeric(RMSE_pcr),R_Square = as.numeric(R_square_pcr))
 
 
 #############################################
@@ -131,7 +131,7 @@ RMSE_plsr <- sqrt(mean(residuals(model_plsr)^2))
 R_square_plsr <- R2(model_plsr)$val[4]
 # eval_result(preds_plsr)  #generate wrong number R2<0
 #rmsep_plsr <- sqrt(mean((trainFrame$Resp - preds_plsr)^2)) ##0.9489
-PLSR_result <- data.frame(method = "Partial Least Square", drug = drug, RMSE=as.numeric(RMSE_plsr),R_Square = as.numeric(R_square_plsr))
+PLSR_result <- list(method = "Partial Least Square", drug = drug, RMSE=as.numeric(RMSE_plsr),R_Square = as.numeric(R_square_plsr))
 
 
 
@@ -142,7 +142,7 @@ PLSR_result <- data.frame(method = "Partial Least Square", drug = drug, RMSE=as.
  #without penalty: alpha=0 (Risge Penalty) 
 cv_output_0 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=0,type.measure="mse",nfolds=10)
 (best_lam_0 <- cv_output_0$lambda.min) ###104.2796                             ########################### Evry time different. 49.54127, 47.28955, 114.4468
-model_ridgeglm<- glmnet(trainFrame[,-1],trainFrame$Resp,alpha=0, lambda=best_lam_0)  ######################Cannot run from my end.
+model_ridgeglm<- glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=0, lambda=best_lam_0)  ######################Cannot run from my end.
 preds_ridgeglm <- predict(model_ridgeglm, s = best_lam_0, newx=as.matrix(trainFrame[,-1]))
 
 RidgeGLM_result <-eval_result(preds_ridgeglm) 
@@ -158,7 +158,7 @@ RidgeGLM_result$drug <- drug
 #############################################
 cv_output_1 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=1,type.measure="mse",nfolds=10)
 (best_lam_1 <- cv_output_1$lambda.min) ### 0.1444154
-model_Lasso_1<- glmnet(trainFrame[,-1],trainFrame$Resp,alpha=1, lambda=best_lam_1) 
+model_Lasso_1<- glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=1, lambda=best_lam_1) 
 preds_Lasso_1 <- predict(model_Lasso_1, s = best_lam_1, newx=as.matrix(trainFrame[,-1]))
 
 Lasso_result_1<-eval_result(preds_Lasso_1) 
@@ -181,28 +181,31 @@ result_model_KNN<-model_KNN$results
 
 KNN_result$method <- "K-nearest neighbors (KNN) algorithm"
 KNN_result$drug <- drug
-
+KNN_result$RMSE <- model_KNN$result$RMSE[3]
+KNN_result$Rsquared <- model_KNN$result$Rsquared[3]
+KNN_result$MAE <- model_KNN$results$MAE[3]
 
 #############################################
 ############ 8. Support vector machine regression
 #############################################
-library(e1071)
+#library(e1071)
 
-model_SVM<-svm(Resp~.,data=trainFrame)
-preds_SVM<-predict(model_SVM,trainFrame)
+#model_SVM<-svm(Resp~.,data=trainFrame)
+#preds_SVM<-predict(model_SVM,trainFrame)
 
-SVM_result<-eval_result(preds_SVM)
+#SVM_result<-eval_result(preds_SVM)
 
-SVM_result$method <- "Support vector machine regression"
-SVM_result$drug <- drug
 
-#model_svm<-train(Resp~.,data=trainFrame,method = 'svmLinear2')
-#preds_svm<-predict(model_svm,trainFrame)
-#svm_result<-eval_result(preds_svm)
 
-#svm_result$RMSE <- model_svm$results[2,2]
-#svm_result$Rsquared <- model_svm$results[2,3]
-#svm_result$MAE <- model_svm$results[2,4]
+model_svm<-train(Resp~.,data=trainFrame,method = 'svmLinear2')
+preds_svm<-predict(model_svm,trainFrame)
+svm_result<-eval_result(preds_svm)
+
+svm_result$method <- "Support vector machine regression"
+svm_result$drug <- drug
+svm_result$RMSE <- model_svm$result$RMSE[3]
+svm_result$Rsquared <- model_svm$result$Rsquared[3]
+svm_result$MAE <- model_svm$results$MAE[3]
 #svm_result$RMSESD <- model_svm$results[2,5]
 #svm_result$RsquaredSD <- model_svm$results[2,6]
 #svm_result$MAESD <- model_svm$results[2,7]
@@ -219,9 +222,15 @@ preds_treebag<-predict(model_treebag,trainFrame)
 result_model_treebag<-model_treebag$results ## RMSE=1.09846, R2=0.212 MAE=0.8788
 treebag_result<-eval_result(preds_treebag)
 
+
+treebag_result$RMSE <- model_treebag$result$RMSE
+treebag_result$R_squared <- model_treebag$result$Rsquared
+treebag_result$MAE <- model_treebag$result$MAE
+
 #AIC_BIC_treebag<-AIC_BIC_train(model_treebag)
 
-
+treebag_result$method <- "Treebag (bootstrap aggregating) algorithm"
+treebag_result$drug <- drug
 
 #############################################
 ############ 10. Elastic Net
@@ -233,9 +242,13 @@ preds_EN<-predict(model_EN,trainFrame)
 
 EN_result<-eval_result(preds_EN) ## RMSE=0.98 R2=0.363 R2_adj=1.02 MAE=0.7977 AIC=
 
-model_EN$results$RMSE[6] ## 1.1026
-model_EN$results$Rsquared[6] ##0.2227984
+EN_result$RMSE <- model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
+EN_result$R_Square <- model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
+EN_result$MAE <- model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
+model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
 
+EN_result$method <- "Support vector machine regression"
+EN_result$drug <- drug
 #EN_result$AIC<-AIC_BIC_train(model_EN)$AIC
 #EN_result$AICc<-AIC_BIC_train(model_EN)$AICc
 #EN_result$BIC<-AIC_BIC_train(model_EN)$BIC
@@ -245,9 +258,10 @@ model_EN$results$Rsquared[6] ##0.2227984
 
 
 
+l <- list(GR_result, RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,svm_result,treebag_result,EN_result,KNN_result)
+#l <- list(GR_result, RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,SVM_result,treebag_result,EN_result,KNN_result)
 
-Result_final <- rbind(GR_result, Ridge_result,RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,SVM_result,treebag_result,EN_result,KNN_result)
-
+df = Result_final[,c("method","drug","RMSE","R_Square","Adjusted_R2","MAE","F_stat","t_test","ks_test","AIC","AICc","BIC")]
 
 
 ####### Ridge model by lm.ridge ????? coef is extremely samll 
