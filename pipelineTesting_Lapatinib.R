@@ -12,6 +12,8 @@ library(MASS)
 library(dplyr)
 library(caret)
 library(glmnet)
+library(randomForest)
+library(pls)
 
 #drug <- "Vinblastine"
 #############################################
@@ -61,12 +63,12 @@ AIC_BIC_train<-function(model){
 methods_result <- function(drug_data, drug){
  trainFrame = drug_data
 
-cat(Sys.time(),"==========",drug,":")
+cat(paste(Sys.time(),"==========",drug,":\n"))
 #############################################
 ######### 1. GR paper linear Ridge  #########
 #############################################
 
-cat(Sys.time(),"==========","1. GR paper linear Ridge Start...")
+cat(paste(Sys.time(),"==========","1. GR paper linear Ridge Start...\n"))
 
 model_GR <- linearRidge(Resp ~ ., data = trainFrame)
 preds_GR<-predict(model_GR,trainFrame)
@@ -81,14 +83,13 @@ GR_result$drug <- drug
 #195.24401  97.75603 292.73200 
 
 #summary_GRsummary(model_GR)$summaries$summary97          ##### Do we keep this? 
-cat(paste(Sys.time(),"==========","1. GR paper linear Ridge Complete"))
+cat(paste(Sys.time(),"==========","1. GR paper linear Ridge Complete\n"))
 
 #############################################
 ########## 2.  Random Forest
 #############################################
-cat(paste(Sys.time(),"==========","2. Random Forest Start..."))
+cat(paste(Sys.time(),"==========","2. Random Forest Start...\n"))
 
-library(randomForest)
 
 model_RF<- randomForest(Resp~.,data=trainFrame, importance = TRUE)
 preds_RF<-predict(model_RF,trainFrame)
@@ -97,7 +98,7 @@ preds_RF<-predict(model_RF,trainFrame)
 RF_result<-eval_result(trainFrame,preds_RF) 
 RF_result$method <- "Random Forest"
 RF_result$drug <- drug
-cat(paste(Sys.time(),"==========","2. Random Forest Complete"))
+cat(paste(Sys.time(),"==========","2. Random Forest Complete\n"))
 
 #cr_RF<-rfcv(trainFrame[,-1],trainFrame$Resp,cv.fold=10)  ############# wait for result. Do we keep this? 
 
@@ -110,9 +111,8 @@ cat(paste(Sys.time(),"==========","2. Random Forest Complete"))
 #############################################
 ############## 3. Principle Component Regression
 #############################################
-cat(paste(Sys.time(),"==========","3. Principle Component Regression Start..."))
+cat(paste(Sys.time(),"==========","3. Principle Component Regression Start...\n"))
 
-library(pls)
 
 model_pcr<-pcr(Resp~.,data=trainFrame,ncomp=3, validation = "CV", jackknife = TRUE)
 #jack.test(model_pcr, ncomp = 3)
@@ -130,13 +130,13 @@ R_square_pcr <- R2(model_pcr)$val[4] # unadjusted R2 with 3 components.
 #R2adj<-1-((1-R_square_pcr)*(nrow(trainFrame)-1)/(nrow(trainFrame)-(ncol(trainFrame)-1)-1)) ############# After adj >1.
 
 PCR_result <- list(method = "Principle Component Regression", drug = drug, RMSE=as.numeric(RMSE_pcr),R_Square = as.numeric(R_square_pcr))
-cat(paste(Sys.time(),"==========","3. Principle Component Regression Complete"))
+cat(paste(Sys.time(),"==========","3. Principle Component Regression Complete\n"))
 
 
 #############################################
 ##############  4. Partial Least Square
 #############################################
-cat(paste(Sys.time(),"==========","4. Partial Least Square Start..."))
+cat(paste(Sys.time(),"==========","4. Partial Least Square Start...\n"))
 model_plsr<-plsr(Resp~.,data=trainFrame, ncomp=3, validation="CV",jackknife=TRUE)
 #jack.test(model_plsr,ncomp=3)
 preds_plsr<-predict(model_plsr,trainFrame,type="response")
@@ -147,12 +147,12 @@ R_square_plsr <- R2(model_plsr)$val[4]
 # eval_result(preds_plsr)  #generate wrong number R2<0
 #rmsep_plsr <- sqrt(mean((trainFrame$Resp - preds_plsr)^2)) ##0.9489
 PLSR_result <- list(method = "Partial Least Square", drug = drug, RMSE=as.numeric(RMSE_plsr),R_Square = as.numeric(R_square_plsr))
-cat(paste(Sys.time(),"==========","4. Partial Least Square Complete"))
+cat(paste(Sys.time(),"==========","4. Partial Least Square Complete\n"))
 
 #############################################
 ############ 5. Ridge GLM penalty alpha=0
 #############################################
-cat(paste(Sys.time(),"==========","5. Ridge GLM penalty Start..."))
+cat(paste(Sys.time(),"==========","5. Ridge GLM penalty Start...\n"))
 cv_output_0 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=0,type.measure="mse",nfolds=10)
 (best_lam_0 <- cv_output_0$lambda.min) ###104.2796                             ########################### Evry time different. 49.54127, 47.28955, 114.4468
 model_ridgeglm<- glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=0, lambda=best_lam_0)  ######################Cannot run from my end.
@@ -165,12 +165,12 @@ RidgeGLM_result$BIC<-AIC_BIC_glmnet(model_ridgeglm)$BIC
 
 RidgeGLM_result$method <- "Ridge GLM"
 RidgeGLM_result$drug <- drug
-cat(paste(Sys.time(),"==========","5. Ridge GLM penalty Complete"))
+cat(paste(Sys.time(),"==========","5. Ridge GLM penalty Complete\n"))
 
 #############################################
 ############ 6. Lasso GLM penalty alpha=1
 #############################################
-cat(paste(Sys.time(),"==========","6. Lasso GLM penalty Start..."))
+cat(paste(Sys.time(),"==========","6. Lasso GLM penalty Start...\n"))
 cv_output_1 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=1,type.measure="mse",nfolds=10)
 (best_lam_1 <- cv_output_1$lambda.min) ### 0.1444154
 model_Lasso_1<- glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=1, lambda=best_lam_1) 
@@ -183,12 +183,12 @@ Lasso_result_1$BIC<-AIC_BIC_glmnet(model_Lasso_1)$BIC
 
 Lasso_result_1$method <- "Lasso GLM"
 Lasso_result_1$drug <- drug
-cat(paste(Sys.time(),"==========","6. Lasso GLM penalty Complete"))
+cat(paste(Sys.time(),"==========","6. Lasso GLM penalty Complete\n"))
 
 #############################################
 ############ 7. K-nearest neighbors (KNN) algorithm
 #############################################
-cat(paste(Sys.time(),"==========","7. K-nearest neighbors (KNN) algorithm Start..."))
+cat(paste(Sys.time(),"==========","7. K-nearest neighbors (KNN) algorithm Start...\n"))
 model_KNN<-train(Resp~.,data=trainFrame,method="knn",trControl=trainControl("cv",number=10))
 preds_KNN<-predict(model_KNN,trainFrame)
 
@@ -200,13 +200,13 @@ KNN_result$drug <- drug
 KNN_result$RMSE <- model_KNN$result$RMSE[3]
 KNN_result$Rsquared <- model_KNN$result$Rsquared[3]
 KNN_result$MAE <- model_KNN$results$MAE[3]
-cat(paste(Sys.time(),"==========","7. K-nearest neighbors (KNN) algorithm Complete"))
+cat(paste(Sys.time(),"==========","7. K-nearest neighbors (KNN) algorithm Complete\n"))
 
 #############################################
 ############ 8. Support vector machine regression
 #############################################
 
-cat(paste(Sys.time(),"==========","8. Support vector machine regression Start..."))
+cat(paste(Sys.time(),"==========","8. Support vector machine regression Start...\n"))
 
 model_svm<-train(Resp~.,data=trainFrame,method = 'svmLinear2')
 preds_svm<-predict(model_svm,trainFrame)
@@ -217,7 +217,7 @@ svm_result$drug <- drug
 svm_result$RMSE <- model_svm$result$RMSE[3]
 svm_result$Rsquared <- model_svm$result$Rsquared[3]
 svm_result$MAE <- model_svm$results$MAE[3]
-cat(paste(Sys.time(),"==========","8. Support vector machine regression Complete"))
+cat(paste(Sys.time(),"==========","8. Support vector machine regression Complete\n"))
 
 #svm_result$RMSESD <- model_svm$results[2,5]
 #svm_result$RsquaredSD <- model_svm$results[2,6]
@@ -226,7 +226,7 @@ cat(paste(Sys.time(),"==========","8. Support vector machine regression Complete
 #############################################
 ############ 9. Treebag (bootstrap aggregating) algorithm
 #############################################
-cat(paste(Sys.time(),"==========","9. Treebag (bootstrap aggregating) algorithm Start..."))
+cat(paste(Sys.time(),"==========","9. Treebag (bootstrap aggregating) algorithm Start...\n"))
 model_treebag<-train(Resp~.,data=trainFrame,method = 'treebag',trControl=trainControl("cv",number=10))
 preds_treebag<-predict(model_treebag,trainFrame)
 
@@ -241,12 +241,12 @@ treebag_result$MAE <- model_treebag$result$MAE
 
 treebag_result$method <- "Treebag (bootstrap aggregating) algorithm"
 treebag_result$drug <- drug
-cat(paste(Sys.time(),"==========","9. Treebag (bootstrap aggregating) algorithm Complete"))
+cat(paste(Sys.time(),"==========","9. Treebag (bootstrap aggregating) algorithm Complete\n"))
 
 #############################################
 ############ 10. Elastic Net
 #############################################
-cat(paste(Sys.time(),"==========","10. Elastic Net Regression Start..."))
+cat(paste(Sys.time(),"==========","10. Elastic Net Regression Start...\n"))
 model_EN<-train(Resp~.,data=trainFrame,method="glmnet",trControl=trainControl("cv",number=10))
 (model_EN$bestTune)
 preds_EN<-predict(model_EN,trainFrame)
@@ -260,7 +260,7 @@ model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
 
 EN_result$method <- "Elastic Net"
 EN_result$drug <- drug
-cat(paste(Sys.time(),"==========","10. Elastic Net Regression Complete"))
+cat(paste(Sys.time(),"==========","10. Elastic Net Regression Complete\n"))
 
 #EN_result$AIC<-AIC_BIC_train(model_EN)$AIC
 #EN_result$AICc<-AIC_BIC_train(model_EN)$AICc
