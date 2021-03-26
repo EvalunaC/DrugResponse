@@ -21,7 +21,7 @@ library(mgcv)
 
 library(qrnn)
 
-getDrugData <- function(input_medication_name){
+
 
 setwd("/extraspace/ychen42/Drug_Response/GROrignial/dataIn/rnaSeq/BRCA.Merge_rnaseqv2")
 tpmDatMat_bc <- read.delim("BRCA.rnaseqv2_data.txt", as.is=T)
@@ -67,6 +67,13 @@ CCLE_train<-as.matrix(CCLE_train)
 drug_IC50_train<-as.numeric(drug_IC50_train)
 return(list(drug_IC50_train=drug_IC50_train, CCLE_train=CCLE_train))
 }
+
+######################################################
+# Obtain medication list and prepare data from here
+######################################################
+
+getDrugData <- function(input_medication_name){
+
 CCLETrainData<-getCGPinfo_New(input_medication_name)
 
 #CCLETrainData<-getCGPinfo_New("Lapatinib")
@@ -119,4 +126,10 @@ if (powerTransformPhenotype) {
 
 trainFrame <- data.frame(Resp = trainingPtype, t(homData$train[keepRows,]))
 return(trainFrame)  }
+
+
+
+#input_medication_name <- "Vinblastine"
+#input_medication_name <- "Camptothecin"
+
 
