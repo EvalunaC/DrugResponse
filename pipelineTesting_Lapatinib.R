@@ -57,7 +57,10 @@ AIC_BIC_train<-function(model){
   return(list(AIC=AIC,AICc=AICc,BIC=BIC))
 }
 
-drug <- "Vinblastine"
+
+methods_result <- function(trainFrame, drug){
+ 
+
 paste(Sys.time(),"==========",drug,":")
 #############################################
 ######### 1. GR paper linear Ridge  #########
@@ -255,7 +258,7 @@ EN_result$R_Square <- model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTu
 EN_result$MAE <- model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
 model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
 
-EN_result$method <- "Support vector machine regression"
+EN_result$method <- "Elastic Net"
 EN_result$drug <- drug
 print(paste(Sys.time(),"==========","10. Elastic Net Regression Complete"))
 
@@ -269,8 +272,13 @@ print(paste(Sys.time(),"==========","10. Elastic Net Regression Complete"))
 l <- list(GR_result, RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,svm_result,treebag_result,EN_result,KNN_result)
 Result_final <- ldply(l, data.frame)
 df = Result_final[,c("method","drug","RMSE","R_Square","Adjusted_R2","MAE","F_stat","t_test","ks_test","AIC","AICc","BIC")]
-name <- paste("/extraspace/ychen42/Drug_Response/yiqings_work/Output/",drug,".csv", sep="",collapse = NULL)
-write.csv(df,name, quote=FALSE)
+  return(df)
+}
+
+#drug <- "Vinblastine"
+
+#name <- paste("/extraspace/ychen42/Drug_Response/yiqings_work/Output/",drug,".csv", sep="",collapse = NULL)
+#write.csv(df,name, quote=FALSE)
 
 
 
