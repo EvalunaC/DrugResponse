@@ -14,8 +14,8 @@ library(caret)
 library(glmnet)
 library(randomForest)
 library(pls)
-
-#drug <- "Vinblastine"
+library(plyr)
+#drug <- "Cisplatin"
 #############################################
 ######### 0. Validation Function  #########
 #############################################
@@ -272,7 +272,15 @@ cat(paste(Sys.time(),"==========","10. Elastic Net Regression Complete\n"))
 l <- list(GR_result, RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,svm_result,treebag_result,EN_result,KNN_result)
 Result_final <- ldply(l, data.frame)
 df <- Result_final[,c("method","drug","RMSE","R_Square","Adjusted_R2","MAE","F_stat","t_test","ks_test","AIC","AICc","BIC")]
-return(df)
+  name <- paste("/extraspace/ychen42/Drug_Response/yiqings_work/Output/",drug,".csv", sep="",collapse = NULL)
+  write.csv(df,name, quote=FALSE)
+#write.csv(df, "/extraspace/ychen42/Drug_Response/yiqings_work/Output/192Drug_MethodsResult.csv",
+#          col.names = FALSE,
+#          row.names = TRUE,
+#          quote = FALSE)
+  
+  
+#  return(df)
 }
 
 #drug <- "Vinblastine"
