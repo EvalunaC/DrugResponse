@@ -90,14 +90,25 @@ cat(paste(Sys.time(),"==========","1. GR paper linear Ridge Complete\n"))
 #############################################
 cat(paste(Sys.time(),"==========","2. Random Forest Start...\n"))
 
+model_rf<-train(Resp~.,data=trainFrame,method="rf",trControl=trainControl("cv",number=10))
+preds_rf<-predict(model_KNN,trainFrame)
 
-model_RF<- randomForest(Resp~.,data=trainFrame, importance = TRUE)
-preds_RF<-predict(model_RF,trainFrame)
+rf_result<-eval_result(trainFrame,preds_rf)
+result_model_rf<-model_rf$results
+
+rf_result$method <- "Random Forest"
+rf_result$drug <- drug
+rf_result$RMSE <- model_rf$result$RMSE[3]
+rf_result$Rsquared <- model_rf$result$Rsquared[3]
+rf_result$MAE <- model_rf$results$MAE[3]
+
+#model_RF<- randomForest(Resp~.,data=trainFrame, importance = TRUE)
+#preds_RF<-predict(model_RF,trainFrame)
 
 
-RF_result<-eval_result(trainFrame,preds_RF) 
-RF_result$method <- "Random Forest"
-RF_result$drug <- drug
+#RF_result<-eval_result(trainFrame,preds_RF) 
+#RF_result$method <- "Random Forest"
+#RF_result$drug <- drug
 cat(paste(Sys.time(),"==========","2. Random Forest Complete\n"))
 
 #cr_RF<-rfcv(trainFrame[,-1],trainFrame$Resp,cv.fold=10)  ############# wait for result. Do we keep this? 
@@ -112,7 +123,6 @@ cat(paste(Sys.time(),"==========","2. Random Forest Complete\n"))
 ############## 3. Principle Component Regression
 #############################################
 cat(paste(Sys.time(),"==========","3. Principle Component Regression Start...\n"))
-
 
 model_pcr<-pcr(Resp~.,data=trainFrame,ncomp=3, validation = "CV", jackknife = TRUE)
 #jack.test(model_pcr, ncomp = 3)
