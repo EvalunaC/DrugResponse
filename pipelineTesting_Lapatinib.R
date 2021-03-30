@@ -91,16 +91,17 @@ cat(paste(Sys.time(),"==========","1. GR paper linear Ridge Complete\n"))
 cat(paste(Sys.time(),"==========","2. Random Forest Start...\n"))
 
 model_rf<-train(Resp~.,data=trainFrame,method="rf",trControl=trainControl("cv",number=10))
-preds_rf<-predict(model_KNN,trainFrame)
+preds_rf<-predict(model_rf,trainFrame)
 
 rf_result<-eval_result(trainFrame,preds_rf)
 result_model_rf<-model_rf$results
 
 rf_result$method <- "Random Forest"
 rf_result$drug <- drug
-rf_result$RMSE <- model_rf$result$RMSE[3]
-rf_result$Rsquared <- model_rf$result$Rsquared[3]
-rf_result$MAE <- model_rf$results$MAE[3]
+rf_result$RMSE <- model_rf$result$RMSE[3]          #####################Need to check
+rf_result$Rsquared <- model_rf$result$Rsquared[3]  #####################Need to check
+rf_result$MAE <- model_rf$results$MAE[3]           #####################Need to check
+#############EN_result$RMSE <- model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
 
 #model_RF<- randomForest(Resp~.,data=trainFrame, importance = TRUE)
 #preds_RF<-predict(model_RF,trainFrame)
@@ -210,6 +211,8 @@ KNN_result$drug <- drug
 KNN_result$RMSE <- model_KNN$result$RMSE[3]
 KNN_result$Rsquared <- model_KNN$result$Rsquared[3]
 KNN_result$MAE <- model_KNN$results$MAE[3]
+############ #EN_result$RMSE <- model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
+
 cat(paste(Sys.time(),"==========","7. K-nearest neighbors (KNN) algorithm Complete\n"))
 
 #############################################
@@ -264,9 +267,9 @@ preds_EN<-predict(model_EN,trainFrame)
 EN_result<-eval_result(trainFrame,preds_EN) ## RMSE=0.98 R2=0.363 R2_adj=1.02 MAE=0.7977 AIC=
 
 EN_result$RMSE <- model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
-EN_result$R_Square <- model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
-EN_result$MAE <- model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
-model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
+EN_result$R_Square <- model_EN$results$Rsquared[as.numeric(row.names(model_EN$bestTune))]
+EN_result$MAE <- model_EN$results$MAE[as.numeric(row.names(model_EN$bestTune))]
+#model_EN$results$RMSE[as.numeric(row.names(model_EN$bestTune))]
 
 EN_result$method <- "Elastic Net"
 EN_result$drug <- drug
@@ -311,38 +314,43 @@ df <- Result_final[,c("method","drug","RMSE","R_Square","Adjusted_R2","MAE","F_s
 #mean(robfit$residuals^2)
 #summary(robfit)
 
+
+##########################################
 ############## Quantile Regression Neural Network ## takes too long time 
-# library(qrnn)
-#model_qrnn<-train(Resp~.,data=trainFrame,method = 'qrnn',trControl=trainControl("cv",number=10))
-#preds_qrnn<-predict(model_qrnn,trainFrame)
+##########################################
+library(qrnn)
+model_qrnn<-train(Resp~.,data=trainFrame,method = 'qrnn',trControl=trainControl("cv",number=10))
+preds_qrnn<-predict(model_qrnn,trainFrame)
 
-#model_qrnn <- qrnn.fit(x=as.matrix(trainFrame[,2:13543]),y=as.matrix(trainFrame$Resp),data=trainFrame,method="adam",n.hidden=2, n.trials=1, tau=0.2678857,n.errors.max=1000,iter.max=50,bag=TRUE) ## Error
+model_qrnn <- qrnn.fit(x=as.matrix(trainFrame[,2:13543]),y=as.matrix(trainFrame$Resp),data=trainFrame,method="adam",n.hidden=2, n.trials=1, tau=0.2678857,n.errors.max=1000,iter.max=50,bag=TRUE) ## Error
 
+############## ############## ############## 
 ############## ???? Robust Linear Model
-
-#model_rlm<-train(Resp~.,data=trainFrame,method = 'rlm',trControl=trainControl("cv",number=10)) ## Error 
-#preds_rlm<-predict(model_rlm,testFrame)
-#preds_rlm<- preds_rlm^(1/0.8944584)
+############## ############## ############## 
+model_rlm<-train(Resp~.,data=trainFrame,method = 'rlm',trControl=trainControl("cv",number=10)) ## Error 
+preds_rlm<-predict(model_rlm,testFrame)
+#preds_rlm<- preds_rlm^(1/0.8944584) # no boxcox for now.
 #preds_rlm <- preds_rlm - 2.944905
 
-# model_rlm<-rlm(Resp~.,data=trainFrame,psi = psi.bisquare) ##Error: x is singular
+model_rlm<-rlm(Resp~.,data=trainFrame,psi = psi.bisquare) ##Error: x is singular
 
-
+#################################################################
 #############  Quantile Regression - conquer method
+##############################################################################
+library(quantreg)
+ model_rq <- rq(Resp~.,data=trainFrame, method = "conquer") the number of conlumns of x can not exceed the number of rows x
 
-#library(quantreg)
-# model_rq <- rq(Resp~.,data=trainFrame, method = "conquer") the number of conlumns of x can not exceed the number of rows x
+library(conquer)
+model_conquer <- conquer(X=as.matrix(trainFrame[,-1]),Y=trainFrame$Resp,checkSing = TRUE) #same with above
 
-#library(conquer)
-#model_conquer <- conquer(X=as.matrix(trainFrame[,-1]),Y=trainFrame$Resp,checkSing = TRUE) #same with above
-
-
+####################################################
 ############# Bayesian Regularized Neural Networks
-#library(brnn)
-#library(parallel)
-#model_brnn<-brnn(Resp~.,data=trainFrame,neurons=5, epochs=1000, cores=3)  ## long time on server
+####################################################
+library(brnn)
+library(parallel)
+model_brnn<-brnn(Resp~.,data=trainFrame,neurons=5, epochs=1000, cores=3)  ## long time on server
 
-#preds_brnn<-predict(model_brnn,trainFrame)
+preds_brnn<-predict(model_brnn,trainFrame)
 
 ########## ANN
 #model_ANN<-neuralnet(Resp~.,data=trainFrame,linear.output=FALSE)
