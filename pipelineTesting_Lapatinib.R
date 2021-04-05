@@ -15,6 +15,7 @@ library(glmnet)
 library(randomForest)
 library(pls)
 library(plyr)
+library(deepnet)
 #drug <- "Cisplatin"
 #############################################
 ######### 0. Validation Function  #########
@@ -281,6 +282,25 @@ cat(paste(Sys.time(),"==========","10. Elastic Net Regression Complete\n"))
 
 #AIC_BIC_KNN<-AIC_BIC_train(model_KNN)
 
+  
+####################################################
+############# 11. Stacked AutoEncoder Deep Neural Network
+####################################################
+
+model_dnn<-train(Resp~.,data=trainFrame,method = 'dnn')
+dnn_result$RMSE <- model_dnn$result$RMSE
+dnn_result$R_squared <- model_dnn$result$Rsquared
+dnn_result$MAE <- model_dnn$result$MAE
+
+dnn_result <- list(method = "Stacked AutoEncoder Deep Neural Network", 
+                   drug = drug, 
+                   RMSE = model_dnn$result$RMSE,
+                   R_Square = model_dnn$result$Rsquared，
+                   MAE = model_dnn$result$MAE
+                  )
+
+
+  
 #l <- list(GR_result, RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,SVM_result,treebag_result,EN_result,KNN_result)
 l <- list(GR_result, RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,svm_result,treebag_result,EN_result,KNN_result)
 Result_final <- ldply(l, data.frame)
@@ -291,8 +311,6 @@ df <- Result_final[,c("method","drug","RMSE","R_Square","Adjusted_R2","MAE","F_s
 #          col.names = FALSE,
 #          row.names = TRUE,
 #          quote = FALSE)
-  
-  
 #  return(df)
 }
 
@@ -327,7 +345,7 @@ model_qrnn <- qrnn.fit(x=as.matrix(trainFrame[,2:13543]),y=as.matrix(trainFrame$
 ############## ############## ############## 
 ############## ???? Robust Linear Model
 ############## ############## ############## 
-model_rlm<-train(Resp~.,data=trainFrame,method = 'rlm',trControl=trainControl("cv",number=10)) ## Error 
+model_rlm<-train(Resp~.,data=trainFrame,method = 'rlm'),trControl=trainControl("cv",number=10)) ## Error 
 preds_rlm<-predict(model_rlm,testFrame)
 #preds_rlm<- preds_rlm^(1/0.8944584) # no boxcox for now.
 #preds_rlm <- preds_rlm - 2.944905
@@ -360,10 +378,6 @@ preds_brnn<-predict(model_brnn,trainFrame)
 ## method=nnet, lm (0.0199), rpart, earth (0.07), Naive Bayes, LDA, QDA, ADA Not working
 #model_LDA <-train(Resp~.,data=trainFrame,method="ada",trControl=trainControl("cv"))
 #preds_LDA<-predict(model_LDA,testFrame)
-
-
-
-
 
 
 
