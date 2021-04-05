@@ -1,10 +1,14 @@
 library(doMC)
-options(cores = 20)
+options(cores = 30)
 registerDoMC()
 
 library(parallel)
 
 #length(possibleDrugs2)
+drug_data <- getDrugData("Lapatinib")
+
+trainFrame <- drug_data
+
 drug_data <- getDrugData(possibleDrugs2[1])
 drug_result<- methods_result(drug_data, possibleDrugs2[1])
 write.csv(df, "/extraspace/ychen42/Drug_Response/yiqings_work/Output/192Drug_MethodsResult.csv",
