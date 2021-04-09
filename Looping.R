@@ -1,5 +1,5 @@
 library(doMC)
-options(cores = 30)
+options(cores = 35)
 registerDoMC()
 
 
@@ -9,11 +9,11 @@ trainFrame <- drug_data
 
 drug_data <- getDrugData(possibleDrugs2[1])
 drug_result<- methods_result(drug_data, possibleDrugs2[1])
+
 write.csv(df, "/extraspace/ychen42/Drug_Response/yiqings_work/Output/192Drug_MethodsResult.csv",
           col.names = FALSE,
           row.names = TRUE,
           quote = FALSE)
-
 
 
 
