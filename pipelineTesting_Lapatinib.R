@@ -61,8 +61,8 @@ AIC_BIC_train<-function(model){
 }
 
 
-methods_result <- function(drug_data, drug){
- trainFrame = drug_data
+#methods_result <- function(drug_data, drug){
+# trainFrame = drug_data
 
 cat(paste(Sys.time(),"==========",drug,":\n"))
 #############################################
@@ -74,16 +74,16 @@ cat(paste(Sys.time(),"==========","1. GR paper linear Ridge Start...\n"))
 model_GR <- linearRidge(Resp ~ ., data = trainFrame)
 preds_GR<-predict(model_GR,trainFrame)
 
-GR_result<-eval_result(trainFrame,preds_GR) ## RMSE=0.639 R2=0.729 R2_adj=1.01 MAE=0.499 AIC= 
+GR_result<-eval_result(trainFrame,preds_GR) ## RMSE=0.639 R2=0.729 R2_adj=1.01 MAE=0.499 AIC=
 
 GR_result$method <- "GR paper linear Ridge"
 GR_result$drug <- drug
 
-#result_model_GR_nPC<-model_GR$df[model_GR$chosen.nPCs,]  #####97 Do we keep this? 
-#    model  variance  residual 
-#195.24401  97.75603 292.73200 
+#result_model_GR_nPC<-model_GR$df[model_GR$chosen.nPCs,]  #####97 Do we keep this?
+#    model  variance  residual
+#195.24401  97.75603 292.73200
 
-#summary_GRsummary(model_GR)$summaries$summary97          ##### Do we keep this? 
+#summary_GRsummary(model_GR)$summaries$summary97          ##### Do we keep this?
 cat(paste(Sys.time(),"==========","1. GR paper linear Ridge Complete\n"))
 
 #############################################
@@ -108,12 +108,12 @@ rf_result$MAE <- model_rf$results$MAE[3]           #####################Need to 
 #preds_RF<-predict(model_RF,trainFrame)
 
 
-#RF_result<-eval_result(trainFrame,preds_RF) 
+#RF_result<-eval_result(trainFrame,preds_RF)
 #RF_result$method <- "Random Forest"
 #RF_result$drug <- drug
 cat(paste(Sys.time(),"==========","2. Random Forest Complete\n"))
 
-#cr_RF<-rfcv(trainFrame[,-1],trainFrame$Resp,cv.fold=10)  ############# wait for result. Do we keep this? 
+#cr_RF<-rfcv(trainFrame[,-1],trainFrame$Resp,cv.fold=10)  ############# wait for result. Do we keep this?
 
 #   13542     6771     3386     1693      846      423      212      106
 #1.254577 1.250099 1.227441 1.230109 1.211373 1.229579 1.214665 1.238006
@@ -170,7 +170,7 @@ cv_output_0 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),a
 model_ridgeglm<- glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=0, lambda=best_lam_0)  ######################Cannot run from my end.
 preds_ridgeglm <- predict(model_ridgeglm, s = best_lam_0, newx=as.matrix(trainFrame[,-1]))
 
-RidgeGLM_result <-eval_result(trainFrame,preds_ridgeglm) 
+RidgeGLM_result <-eval_result(trainFrame,preds_ridgeglm)
 RidgeGLM_result$AIC<-AIC_BIC_glmnet(model_ridgeglm)$AIC
 RidgeGLM_result$AICc<-AIC_BIC_glmnet(model_ridgeglm)$AICc
 RidgeGLM_result$BIC<-AIC_BIC_glmnet(model_ridgeglm)$BIC
@@ -185,10 +185,10 @@ cat(paste(Sys.time(),"==========","5. Ridge GLM penalty Complete\n"))
 cat(paste(Sys.time(),"==========","6. Lasso GLM penalty Start...\n"))
 cv_output_1 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=1,type.measure="mse",nfolds=10)
 (best_lam_1 <- cv_output_1$lambda.min) ### 0.1444154
-model_Lasso_1<- glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=1, lambda=best_lam_1) 
+model_Lasso_1<- glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=1, lambda=best_lam_1)
 preds_Lasso_1 <- predict(model_Lasso_1, s = best_lam_1, newx=as.matrix(trainFrame[,-1]))
 
-Lasso_result_1<-eval_result(trainFrame,preds_Lasso_1) 
+Lasso_result_1<-eval_result(trainFrame,preds_Lasso_1)
 Lasso_result_1$AIC<-AIC_BIC_glmnet(model_Lasso_1)$AIC
 Lasso_result_1$AICc<-AIC_BIC_glmnet(model_Lasso_1)$AICc
 Lasso_result_1$BIC<-AIC_BIC_glmnet(model_Lasso_1)$BIC
@@ -282,7 +282,7 @@ cat(paste(Sys.time(),"==========","10. Elastic Net Regression Complete\n"))
 
 #AIC_BIC_KNN<-AIC_BIC_train(model_KNN)
 
-  
+
 ####################################################
 ############# 11. Stacked AutoEncoder Deep Neural Network
 ####################################################
@@ -292,15 +292,15 @@ dnn_result$RMSE <- model_dnn$result$RMSE
 dnn_result$R_squared <- model_dnn$result$Rsquared
 dnn_result$MAE <- model_dnn$result$MAE
 
-dnn_result <- list(method = "Stacked AutoEncoder Deep Neural Network", 
-                   drug = drug, 
+dnn_result <- list(method = "Stacked AutoEncoder Deep Neural Network",
+                   drug = drug,
                    RMSE = model_dnn$result$RMSE,
                    R_Square = model_dnn$result$Rsquared，
                    MAE = model_dnn$result$MAE
                   )
 
 
-  
+
 #l <- list(GR_result, RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,SVM_result,treebag_result,EN_result,KNN_result)
 l <- list(GR_result, RidgeGLM_result,RF_result, PCR_result, PLSR_result,Lasso_result_1,svm_result,treebag_result,EN_result,KNN_result)
 Result_final <- ldply(l, data.frame)
@@ -334,7 +334,7 @@ df <- Result_final[,c("method","drug","RMSE","R_Square","Adjusted_R2","MAE","F_s
 
 
 ##########################################
-############## Quantile Regression Neural Network ## takes too long time 
+############## Quantile Regression Neural Network ## takes too long time
 ##########################################
 library(qrnn)
 model_qrnn<-train(Resp~.,data=trainFrame,method = 'qrnn',trControl=trainControl("cv",number=10))
@@ -342,10 +342,10 @@ preds_qrnn<-predict(model_qrnn,trainFrame)
 
 model_qrnn <- qrnn.fit(x=as.matrix(trainFrame[,2:13543]),y=as.matrix(trainFrame$Resp),data=trainFrame,method="adam",n.hidden=2, n.trials=1, tau=0.2678857,n.errors.max=1000,iter.max=50,bag=TRUE) ## Error
 
-############## ############## ############## 
+############## ############## ##############
 ############## ???? Robust Linear Model
-############## ############## ############## 
-model_rlm<-train(Resp~.,data=trainFrame,method = 'rlm'),trControl=trainControl("cv",number=10)) ## Error 
+############## ############## ##############
+model_rlm<-train(Resp~.,data=trainFrame,method = 'rlm'),trControl=trainControl("cv",number=10)) ## Error
 preds_rlm<-predict(model_rlm,testFrame)
 #preds_rlm<- preds_rlm^(1/0.8944584) # no boxcox for now.
 #preds_rlm <- preds_rlm - 2.944905
@@ -378,7 +378,3 @@ preds_brnn<-predict(model_brnn,trainFrame)
 ## method=nnet, lm (0.0199), rpart, earth (0.07), Naive Bayes, LDA, QDA, ADA Not working
 #model_LDA <-train(Resp~.,data=trainFrame,method="ada",trControl=trainControl("cv"))
 #preds_LDA<-predict(model_LDA,testFrame)
-
-
-
-
