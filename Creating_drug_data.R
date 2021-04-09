@@ -14,7 +14,6 @@ library(parallel)
 library(boot)
 library(performance)
 library(caret)
-library(PCFAM)
 library(kernlab)
 library(robustbase)
 library(mgcv)
@@ -102,17 +101,17 @@ doVariableSelection <- function(exprMat, removeLowVaryingGenes)
   return(order(vars, decreasing=TRUE)[seq(1:as.integer(nrow(exprMat)*(1-removeLowVaryingGenes)))])
 }
 
-homData <- homogenizeData(testExprData, trainingExprData, 
+homData <- homogenizeData(testExprData, trainingExprData,
                           batchCorrect = batchCorrect, selection = selection, printOutput = printOutput)
 keepRows <- seq(1:nrow(homData$train))
 evaluabeGenes <- rownames(homData$test)
-keepRowsTrain <- doVariableSelection(trainingExprData[evaluabeGenes, 
+keepRowsTrain <- doVariableSelection(trainingExprData[evaluabeGenes,
 ], removeLowVaryingGenes = removeLowVaryingGenes)
-keepRowsTest <- doVariableSelection(testExprData[evaluabeGenes, 
+keepRowsTest <- doVariableSelection(testExprData[evaluabeGenes,
 ], removeLowVaryingGenes = removeLowVaryingGenes)
 keepRows <- intersect(keepRowsTrain, keepRowsTest)
 numberGenesRemoved <- nrow(homData$test) - length(keepRows)
-if (printOutput) 
+if (printOutput)
   cat(paste("\n", numberGenesRemoved, "low variabilty genes filtered."))
 offset = 0
 if (powerTransformPhenotype) {
@@ -131,5 +130,3 @@ return(trainFrame)  }
 
 #input_medication_name <- "Vinblastine"
 #input_medication_name <- "Camptothecin"
-
-

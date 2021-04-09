@@ -28,37 +28,12 @@ eval_result<-function(trainFrame,preds){
   SST <- sum((trainFrame$Resp - mean(trainFrame$Resp))^2)
   SSM <- sum((preds-mean(trainFrame$Resp))^2)
   R_square <- 1 - SSE / SST
-  R2adj<-1-((1-R_square)*(nrow(trainFrame)-1)/(nrow(trainFrame)-(ncol(trainFrame)-1)-1))
   RMSE = sqrt(SSE/nrow(trainFrame))
-  F_stat<-SSM/(ncol(trainFrame)-1)/(SSE/(nrow(trainFrame)-ncol(trainFrame)))
-  t_test<-t.test(trainFrame$Resp, preds)$p.value
-  ks_test<-ks.test(trainFrame$Resp, preds)$p.value
-  results<-list(RMSE=RMSE,R_Square=R_square, Adjusted_R2=R2adj,MAE=MAE, F_stat=F_stat,t_test=t_test,ks_test=ks_test)
+  results<-list(RMSE=RMSE,R_Square=R_square, MAE=MAE)
   return(results)
 }
 
-##### AIC and BIC function for glmnet result
 
-AIC_BIC_glmnet<-function(model){
-  tLL <- model$nulldev - deviance(model)
-  k <- model$df
-  n <- model$nobs
-  AIC <- -tLL+2*k
-  AICc <- - tLL + 2 * k + 2 * k * (k + 1) / (n - k - 1)
-  BIC<-log(n)*k - tLL
-  return(list(AIC=AIC,AICc=AICc,BIC=BIC))
-}
-
-#### AIC and BIC function for tain result
-AIC_BIC_train<-function(model){
-  tLL <- model$finalModel$nulldev - model$finalModel$nulldev * (1 -  model$finalModel$dev.ratio)
-  k <- model$finalModel$df
-  n <- model$finalModel$nobs
-  AIC <- -tLL+2*k
-  AICc <- - tLL + 2 * k + 2 * k * (k + 1) / (n - k - 1)
-  BIC<-log(n)*k - tLL
-  return(list(AIC=AIC,AICc=AICc,BIC=BIC))
-}
 
 methods_result <- function(drug_data, drug){
  trainFrame = drug_data
@@ -69,7 +44,7 @@ cat(paste(Sys.time(),"==========",drug,":\n"))
 cat(paste(Sys.time(),"==========","1. GR paper linear Ridge Start...\n"))
 model_GR <- linearRidge(Resp ~ ., data = trainFrame)
 preds_GR<-predict(model_GR,trainFrame)
-GR_result<-eval_result(trainFrame,preds_GR) ## RMSE=0.639 R2=0.729 R2_adj=1.01 MAE=0.499 AIC=
+GR_result<-eval_result(trainFrame,preds_GR)
 GR_result$method <- "GR paper linear Ridge"
 GR_result$drug <- drug
 cat(paste(Sys.time(),"==========","1. GR paper linear Ridge Complete\n"))
@@ -111,6 +86,8 @@ var_pcr <- varImp(model_pcr ,useModel = TRUE, nonpara = TRUE, scale = TRUE)
 #############################################
 ##############  4. Partial Least Square
 #############################################
+
+
 cat(paste(Sys.time(),"==========","4. Partial Least Square Start...\n"))
 model_pls<-train(Resp~.,data=trainFrame,method="pls",importance=TRUE)
 #save(model_pls,file="/extraspace/ychen42/Drug_Response/yiqings_work/Lapatinib_models/model_pls.RData")
@@ -239,7 +216,7 @@ cat(paste(Sys.time(),"==========","10. Elastic Net Regression Complete\n"))
 l <- list(GR_result, RidgeGLM_result,rf_result, pcr_result, pls_result,Lasso_result_1,svm_result,treebag_result,EN_result,KNN_result)
 
 Result_final <- ldply(l, data.frame)
-df <- Result_final[,c("method","drug","RMSE","R_Square","Adjusted_R2","MAE","F_stat","t_test","ks_test","AIC","AICc","BIC")]
+df <- Result_final[,c("method","drug","RMSE","R_Square","MAE")]
   name <- paste("/extraspace/ychen42/Drug_Response/yiqings_work/Output_04092021/",drug,".csv", sep="",collapse = NULL)
   write.csv(df,name, quote=FALSE)
 

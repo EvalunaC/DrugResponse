@@ -8,6 +8,8 @@ for (i in 1:length(result_list)){
   result_file <- read.csv(file, header = TRUE,na.strings="NA")
   result0 <- rbind(result0,result_file)
 }
+
+
 #name <- paste("/extraspace/ychen42/Drug_Response/yiqings_work/Output/",drug,".csv", sep="",collapse = NULL)
 #write.csv(df,name, quote=FALSE)
 result_Cisplatin <- read.csv("/extraspace/ychen42/Drug_Response/yiqings_work/Output/Cisplatin.csv", header = TRUE,na.strings="NA")
@@ -32,3 +34,15 @@ p <- p + geom_violin(aes(colour = "#1268FF"), alpha = 0.3)
 q <- p + geom_violin(aes(y = R_Squared, colour = "#3268FF"), alpha = 0.3)
 dev.off()
 
+##############################################
+# Output_04092021
+##############################################
+result_list <- list.files(path="/extraspace/ychen42/Drug_Response/yiqings_work/Output_04092021/")
+result0 <- data.frame()
+length(result_list)
+for (i in 1:length(result_list)){
+  file <- paste("/extraspace/ychen42/Drug_Response/yiqings_work/Output_04092021/",result_list[i], sep="",collapse = NULL)
+  result_file <- read.csv(file, header = TRUE,na.strings="NA")
+  result0 <- rbind(result0,result_file)
+}
+write.csv(result0, "/extraspace/ychen42/Drug_Response/yiqings_work/Output_04092021_combine.csv",quote = FALSE)
