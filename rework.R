@@ -31,9 +31,9 @@ eval_result<-function(preds){
   R2 <- (cor(preds,trainFrame$Resp))^2
   R2adj<-1-((1-R_square)*(nrow(trainFrame)-1)/(nrow(trainFrame)-(ncol(trainFrame)-1)-1))
   RMSE = sqrt(SSE/nrow(trainFrame))
-  F_stat<-SSM/(ncol(trainFrame)-1)/(SSE/(nrow(trainFrame)-ncol(trainFrame)))
-  t_test<-t.test(trainFrame$Resp, preds)$p.value
-  ks_test<-ks.test(trainFrame$Resp, preds)$p.value
+#  F_stat<-SSM/(ncol(trainFrame)-1)/(SSE/(nrow(trainFrame)-ncol(trainFrame)))
+#  t_test<-t.test(trainFrame$Resp, preds)$p.value
+#  ks_test<-ks.test(trainFrame$Resp, preds)$p.value
   results<-list(R2=R2,RMSE=RMSE,R_Square=R_square, Adjusted_R2=R2adj,MAE=MAE, F_stat=F_stat,t_test=t_test,ks_test=ks_test)
   return(results)
 }
@@ -87,8 +87,6 @@ cat(paste(Sys.time(),"==========","3. Principle Component Regression Complete\n"
 #############################################
 ##############  4. Partial Least Square
 #############################################
-
-
 cat(paste(Sys.time(),"==========","4. Partial Least Square Start...\n"))
 model_pls<-train(Resp~.,data=trainFrame,method="pls",importance=TRUE)
 preds_pls<-predict(model_pls,trainFrame)
@@ -166,6 +164,7 @@ cat(paste(Sys.time(),"==========","9. Treebag (bootstrap aggregating) algorithm 
 #############################################
 cat(paste(Sys.time(),"==========","10. Elastic Net Regression Start...\n"))
 model_EN<-train(Resp~.,data=trainFrame,method="glmnet",trControl=trainControl("cv",number=10))
+
 preds_EN<-predict(model_EN,trainFrame)
 en_result<-eval_result(trainFrame,preds_EN)
 en_result$method <- "Elastic Net"
