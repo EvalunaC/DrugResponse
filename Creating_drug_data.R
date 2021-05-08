@@ -58,6 +58,7 @@ getCGPinfo_New<-function(drug){whichNas <- which(is.na(GDSC2[drug,]))
 drug_IC50<-GDSC2[drug,][-whichNas]
 
 
+
 commonCellLines<-intersect(colnames(CCLE_2018_mat),colnames(drug_IC50))
 CCLE_train<-CCLE_2018_mat[,commonCellLines]
 drug_IC50_train<-drug_IC50[commonCellLines]
