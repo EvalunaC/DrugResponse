@@ -24,7 +24,6 @@ testFrame <- drug_data[(train_length+1):dim(drug_data)[1],]
                            allowParallel = FALSE)
   model_pcr<-train(Resp~.,data=trainFrame,method="pcr",importance=TRUE)
   model_pls<-train(Resp~.,data=trainFrame,method="pls",importance=TRUE)
-
   cv_output_0 <- cv.glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=0,type.measure="mse",nfolds=10)
   (best_lam_0 <- cv_output_0$lambda.min)
   model_ridgeglm<- glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alpha=0, lambda=best_lam_0)
@@ -88,3 +87,18 @@ for (i in 2:length(possibleDrugs2)){
     result_file <- read.csv(file, header = TRUE,na.strings="NA")
     result0 <- rbind(result0,result_file)
   }
+  write.csv(result0, "/extraspace/ychen42/Drug_Response/yiqings_work/Output_cv28pcc_05132021_combine.csv",quote = FALSE)
+
+    #====================================================================================================
+    # Plot the downloaded result
+    #====================================================================================================
+"/Users/evaluna/Downloads/Output_cv28pcc_05132021_combine.csv"
+
+result0 <- read.csv("C:/Users/EYC/Downloads/Output_04302021_combine.csv", header = TRUE,na.strings="NA")
+
+
+
+#########
+# Scatter plot
+#####
+preds<-predict(methods_model[i],testFrame)

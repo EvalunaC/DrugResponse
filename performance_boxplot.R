@@ -1,14 +1,17 @@
 library(ggplot2)
 library("nparcomp")
 ?mctp
+library("ggpubr")
 
-result0 <- read.csv("C:/Users/EYC/Downloads/Output_04302021_combine.csv", header = TRUE,na.strings="NA")
+result0 <- read.csv("/extraspace/ychen42/Drug_Response/yiqings_work/Output_04092021_combine.csv", header = TRUE,na.strings="NA")
+#result0 <- read.csv("C:/Users/EYC/Downloads/Output_04302021_combine.csv", header = TRUE,na.strings="NA")
 result0 <- read.csv("/Users/evaluna/Output_04092021_combine.csv", header = TRUE,na.strings="NA")
 p <- ggplot(result0, aes(factor(method), RMSE))
 p <- p + geom_violin(aes(colour = "#1268FF"), alpha = 0.3)
 q <- p + geom_violin(aes(y = R_Square, colour = "#3268FF"), alpha = 0.3)
 q
 
+pdf("/extraspace/ychen42/Drug_Response/yiqings_work/performance.pdf")
 
 ggplot(result0, aes(x = RMSE)) +
   geom_histogram(fill = "white", colour = "black") +
@@ -21,7 +24,7 @@ plot(nparcomp(RMSE ~ method , data = result0))
 summary(kruskal.test(RMSE ~ method , data = result0))
 kruskal.test(RMSE ~ method , data = result0)$method
 
-library("ggpubr")
+
 result0$RS <- result0$R_Square
 
 
@@ -49,3 +52,5 @@ ggboxplot(result0, x = "method", y = "MAE",
   scale_x_discrete(guide = guide_axis(angle = 20))
 
 tapply(result0$R_Square, result0$method, summary)
+
+dev.off()
