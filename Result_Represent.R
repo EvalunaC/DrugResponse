@@ -18,7 +18,8 @@ result <- rbind(result_Cisplatin,result_Gefitinib)
 
 method_1 <- result[result$X==1,]
 
-write.csv(result0, "/extraspace/ychen42/Drug_Response/yiqings_work/57Drug_MethodsResult.csv",          col.names = TRUE,
+write.csv(result0, "/extraspace/ychen42/Drug_Response/yiqings_work/57Drug_MethodsResult.csv",
+          col.names = TRUE,
           row.names = TRUE,
           quote = FALSE)
 
