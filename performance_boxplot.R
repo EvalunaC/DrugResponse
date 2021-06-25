@@ -5,13 +5,18 @@ library("dplyr")
 
 ?mctp
 
-#result0 <- read.csv("C:/Users/EYC/Downloads/Output_04302021_combine.csv", header = TRUE,na.strings="NA")
-result0 <- read.csv("/Users/evaluna/Downloads/Output_04092021_combine2.csv", header = TRUE,na.strings="NA")
-pcc <- read.csv("/Users/evaluna/Downloads/Output_cv28pcc_05132021_combine.csv", header = TRUE,na.strings="NA")
+#result0 <- read.csv("C:/Users/EYC/Downloads/Output_cv28_05272021.csv", header = TRUE,na.strings="NA")
+result0 <- read.csv("/Users/evaluna/Downloads/cv28_05272021.csv", header = TRUE,na.strings="NA")
+pcc <- read.csv("/Users/evaluna/Downloads/Output_cv28pcc_05132021_combine2.csv", header = TRUE,na.strings="NA")
 
-result <- merge(result0,pcc,by=c("method","drug"),all=TRUE)
 
-result$method <- factor(result$method, levels = c("GR paper linear Ridge",
+
+result <- merge(result0,pcc,by=c("methods","drug"),all=TRUE)
+result <- result[!is.na(result$RMSE),]
+result <- result[!is.na(result$cv28_pcc),]
+#result <- result[result$drug!="AZD8055",]
+
+result$methods <- factor(result$methods, levels = c("GR paper linear Ridge",
                                                   "Random Forest",
                                                   "Principle Component Regression",
                                                   "Partial Least Square",
@@ -20,16 +25,16 @@ result$method <- factor(result$method, levels = c("GR paper linear Ridge",
                                                   "Elastic Net",
                                                   "Ridge GLM",
                                                   "Lasso GLM"))
-p <- ggplot(result0, aes(factor(method), RMSE))
 
-p <- p + geom_violin(aes(colour = "#1268FF"), alpha = 0.3)
-q <- p + geom_violin(aes(y = R_Square, colour = "#3268FF"), alpha = 0.3)
-q
-old <- factor(result0$method, levels = c("virginica", "versicolor", "setosa"))
-new <- levels(result0$method)
-boxplot(RMSE~method,data=result0,ylim = c(0, 10),col=rainbow(10, alpha=0.2),angle = 75)
+result <- subset(result,select=-c(X.1.x,X.x,X.1.y,X.y))
+summary(result)
 
-ggplot(result0, aes(x = RMSE)) +
+result$RMSE_negative <- -result$RMSE
+result$MAE_negative <- -result$MAE
+
+
+
+ggplot(result, aes(x = RMSE)) +
   geom_histogram(fill = "white", colour = "black") +
   facet_grid(method ~ .)
 
@@ -41,51 +46,75 @@ summary(kruskal.test(RMSE ~ method , data = result0))
 kruskal.test(RMSE ~ method , data = result0)$method
 
 library("ggpubr")
-result$RS <- result$R_Square
 
 
-
-ggboxplot(result0, x = "method", y = "RMSE",
-          color = "method", ylim = c(0, 10),
-          ylab = "RMSE (Less is better)", xlab = "method",repel=TRUE)+  # outlier.shape = NA
-  scale_x_discrete(guide = guide_axis(angle = 20))
+plot_RMSE_negative <- ggboxplot(result, x = "methods", y = "RMSE_negative",
+          color = "methods", ylim = c(-5,0),font.label = list(size = 6),
+          ylab = "Negative RMSE \n (Greater is better)")+ rremove("x.text")+ rremove("xlab")+ rremove("legend")
 #   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5))
 
-ggboxplot(result, x = "method", y = "RS",
-          color = "method", ylim = c(0, 1),
-          ylab = "Simple R_square (Closer to 1 is better)", xlab = "method",repel=TRUE)+
-  scale_x_discrete(guide = guide_axis(angle = 20))
+plot_R_Square <- ggboxplot(result, x = "methods", y = "R_Square",
+          color = "methods", ylim = c(-0.3, 0.45),
+          ylab = "Simple R2 \n(Closer to 1 is better)")+ rremove("x.text")+ rremove("xlab")+ rremove("legend")
 
-ggboxplot(result0, x = "method", y = "R2",
-          color = "method", ylim = c(0, 1),
-          ylab = "R_square by correlation (Closer to 1 is better)", xlab = "method",repel=TRUE)+
-  scale_x_discrete(guide = guide_axis(angle = 20))
+plot_R2_corr <- ggboxplot(result, x = "methods", y = "R2",
+          color = "methods", ylim = c(0, 0.6),
+          ylab = "R2 by correlation \n(Closer to 1 is better)")+ rremove("x.text")+ rremove("xlab")+ rremove("legend")
 
 
-ggboxplot(result0, x = "method", y = "MAE",
-          color = "method", ylim = c(0, 5),
-          ylab = "R_square (Less is better)", xlab = "method",repel=TRUE)+
-  scale_x_discrete(guide = guide_axis(angle = 20))
+plot_MAE_negative <- ggboxplot(result, x = "methods", y = "MAE_negative",
+          color = "methods", ylim = c(-4,0),
+          ylab = "Negative MAE \n(Greater is better)", xlab = "methods",repel=TRUE)+ rremove("x.text")+ rremove("xlab")+ rremove("legend")
 
 
-ggboxplot(result, x = "method", y = "cv28_pcc",
-          color = "method", ylim = c(0, 1),
-          ylab = "PCC (Closer to 1 is better)", xlab = "method",repel=TRUE)+
-  scale_x_discrete(guide = guide_axis(angle = 20))
+plot_cv28_pcc <- ggboxplot(result, x = "methods", y = "cv28_pcc",
+          color = "methods", ylim = c(0.1, 0.8),font.label = list(size = 4),
+          ylab = "Pearson Cor Coef \n(Closer to 1 is better)", xlab = "method",repel=TRUE)+
+  scale_x_discrete(guide = guide_axis(angle = 20))+ rremove("legend")
 
-tapply(result0$R_Square, result0$method, summary)
+#tapply(result0$R_Square, result0$method, summary)
 
+require(gridExtra)
+library(ggplot2)
+library(cowplot)
+pdf("/Users/evaluna/Downloads/evaluation_result/Output_cv28_05272021.pdf",width=7,height=10)
+#grid.arrange(plot_RMSE_negative,
+#             plot_R_Square,
+#             plot_R2_corr,
+#             plot_MAE_negative,
+#             plot_cv28_pcc, 
+#             ncol=1,nrow=5)
+
+plot_grid(plot_RMSE_negative,
+          plot_R_Square,
+          plot_R2_corr,
+          plot_MAE_negative,
+          plot_cv28_pcc, 
+          align = "v", 
+          nrow = 5, 
+          rel_heights = c(1/6, 1/6,1/6,1/6,1/3))
+dev.off()
 
 
 pcc <- read.csv("/Users/evaluna/Downloads/Output_cv28pcc_05132021_combine.csv", header = TRUE,na.strings="NA")
-ggviolin(subset(pcc, !is.na(cv28_pcc)), x = "method", y = "cv28_pcc", 
-          color = "method", ylim = c(0, 1),
+ggviolin(subset(pcc, !is.na(cv28_pcc)), x = "methods", y = "cv28_pcc", 
+          color = "methods", ylim = c(0, 1),
           ylab = "PCC (Closer to 1 is better)", xlab = "method",
          repel=TRUE,draw_quantiles = 0.5,trim=TRUE,add = "jitter")+  # outlier.shape = NA
   scale_x_discrete(guide = guide_axis(angle = 20))+
-  stat_summary(fun.data = function(x) data.frame(y=0.05, label =signif(mean(x),digits = 3)), geom="text") +
+  stat_summary(fun.data = function(x) data.frame(y=0.05, label =signif(median(x),digits = 3)), geom="text") +
   theme(legend.position="none")
 #   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5))
+ggboxplot(subset(pcc, !is.na(cv28_pcc)), x = "methods", y = "cv28_pcc", 
+         color = "methods", ylim = c(0, 1),
+         ylab = "PCC (Closer to 1 is better)", xlab = "methods with median values labeled",
+         repel=TRUE,draw_quantiles = 0.5,trim=TRUE,add = "jitter")+  # outlier.shape = NA
+  scale_x_discrete(guide = guide_axis(angle = 20))+
+  stat_summary(fun.data = function(x) data.frame(y=0.05, label =signif(median(x),digits = 3)), geom="text") +
+  theme(legend.position="none")
+
+
+
 
 radarchart(result)
 
@@ -133,11 +162,9 @@ result_per <- data.frame(method=result_mean$method,rmse=(max(result_mean$RMSE_me
 mae=(1-(result_mean$mae_mean/(max(result_mean$mae_mean)-min(result_mean$mae_mean)))),
 r2simple =result_mean$r2simple_mean,
 r2cor=result_mean$r2cor_mean,
-pcc=result_mean$pcc_mean
-)
+pcc=result_mean$pcc_mean)
 
 
 write.csv(result_mean,"/Users/evaluna/Downloads/result_mean.csv", quote=FALSE)
 radarchart(result_per)
-
 
