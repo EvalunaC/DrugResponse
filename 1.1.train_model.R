@@ -51,7 +51,7 @@ model_rf <- train(Resp~.,data=trainFrame,
                          allowParallel = FALSE)
 
 
-model_ranger<-train(Resp~.,data=trainFrame,num.trees = 50,method="ranger",trControl = trainControl(method = "oob", seed = c(1,1)))
+model_ranger<-train(Resp~.,data=trainFrame,num.trees = 50,method="ranger",trControl = trainControl(method = "oob", seed = list(c(1,1,1,1,1,1),c(1,1,1,1,1,1)))
 
 cat(paste(Sys.time(),"==========","3. Principle Component Regression Start...\n"))
 model_pcr<-train(Resp~.,data=trainFrame,method="pcr",importance=TRUE)

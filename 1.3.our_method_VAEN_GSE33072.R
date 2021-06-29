@@ -13,10 +13,15 @@ pheno.anno[ii, ] -> pheno.anno.pfs
 pts <- pheno.anno.pfs[,2]
 
 #length(possibleDrugs2)
+
+#match("Erlotinib",possibleDrugs2)
 drug <- "Erlotinib"
 drug_data <- getDrugData(drug)
 trainFrame <- drug_data
 
+
+
+#===================================================================================================
 shared_genes = intersect(colnames(trainFrame), rownames(expr.mat))
 print( length(shared_genes) )
 #[1] 13163
@@ -24,12 +29,11 @@ print( length(shared_genes) )
 new.expr.mat = t(expr.mat[match(shared_genes, rownames(expr.mat)),])
 new.expr.mat2 = new.expr.mat[match(pts, rownames(new.expr.mat)),]
 
-
 trainFrame_nohead = trainFrame[-1]
 new.trainFrame_nohead= trainFrame_nohead[,match(shared_genes, colnames(trainFrame_nohead))]
 new.trainFrame <- data.frame(Resp = trainFrame[,1], new.trainFrame_nohead)
 trainFrame <- new.trainFrame
-
+testFrame <- as.data.frame(new.expr.mat2)
 #> dim(new.trainFrame)
 #[1]   467 13164
 
@@ -51,9 +55,6 @@ trainFrame <- new.trainFrame
 
 
 #Prediction
-
-testFrame <- as.data.frame(new.expr.mat2)
-
 preds_GR<-predict(model_GR,as.data.frame(testFrame))
 preds_ranger<-predict(model_ranger,testFrame)
 preds_pcr<-predict(model_pcr,testFrame)
@@ -86,13 +87,11 @@ methods <- c("GR paper linear Ridge",
             "Elastic Net")
 
 #COX model
-
 OS_YEAR = as.numeric(sapply(as.character(pheno.anno.pfs[,"characteristics_ch1.7"]), function(u)trimws(strsplit(u, split=":")[[1]][2])))
 OS = sapply(as.character(pheno.anno.pfs[,"characteristics_ch1.6"]), function(u)trimws(strsplit(u, split=":")[[1]][2]))
 Y1 = Surv(as.numeric(OS_YEAR), as.numeric(OS))
 
-pdf(paste("/extraspace/ychen42/Drug_Response/yiqings_work/Method_validation_VAENdata/Erlotinib.pdf", sep=""))
-
+pdf(paste("/extraspace/ychen42/Drug_Response/yiqings_work/Method_validation_VAENdata/",drug,".pdf", sep=""))
 cox <- list()
 p <- list()
 xvector <- list()
@@ -110,10 +109,5 @@ for (i in 1:9){
   g1 <- ggsurvplot(fit_binary, data=dat,pval =p_word)     #, risk.table = TRUE,pval = TRUE,break.time.by = 1, ggtheme = theme_minimal())
   print(g1)
 }
-
-#fit = survfit(Surv(as.numeric(OS_YEAR), as.numeric(OS)) ~ preds_GR)
-
-#coxph(Y1 ~ xvector)
-
-#print(g1)
 dev.off()
+#===================================================================================================
