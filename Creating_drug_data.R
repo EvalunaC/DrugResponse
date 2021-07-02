@@ -22,7 +22,7 @@ library(qrnn)
 
 
 
-setwd("/extraspace/ychen42/Drug_Response/GROrignial/dataIn/rnaSeq/BRCA.Merge_rnaseqv2")
+#setwd("/extraspace/ychen42/Drug_Response/GROrignial/dataIn/rnaSeq/BRCA.Merge_rnaseqv2")
 #tpmDatMat_bc <- read.delim("BRCA.rnaseqv2_data.txt", as.is=T)
 #
 #tpmDatMat_bc_tpm <- apply(tpmDatMat_bc[-1,which(tpmDatMat_bc[1,] == "scaled_estimate")], 2, as.numeric)
@@ -58,8 +58,6 @@ colnames(GDSC2)<-gsub("[[:space:]]", "", A2) ##809
 getCGPinfo_New<-function(drug){whichNas <- which(is.na(GDSC2[drug,]))
 #drug_IC50<-GDSC_AUC_matrix[drug,][-whichNas]
 drug_IC50<-GDSC2[drug,][-whichNas]
-
-
 
 commonCellLines<-intersect(colnames(CCLE_2018_mat),colnames(drug_IC50))
 CCLE_train<-CCLE_2018_mat[,commonCellLines]
