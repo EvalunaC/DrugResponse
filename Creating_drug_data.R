@@ -1,6 +1,6 @@
 ## TODO run the loop to save all files.
 
-set.seed(1000)
+#set.seed(1000)
 
 #library(caret)
 
@@ -59,10 +59,10 @@ GDSC2<-read.csv("GDSC2_IC50_matrix.csv", header=T,row.names=1)
 
 #GDSC2<-read.csv("GDSC2_matrix.csv", header=T,row.names=1)
 possibleDrugs2<-rownames(GDSC2) ##192
-A1<-gsub("[[:punct:]]", " ", colnames(GDSC))
+A1<-gsub("[[:punct:]]", " ", colnames(GDSC2))
 A2<-gsub("[[:space:]]", "", A1) ##809
 A3 <- gsub("^X", "",  A2)
-colnames(GDSC)<-toupper(A3)
+colnames(GDSC2)<-toupper(A3)
 
 getCGPinfo_New<-function(drug){whichNas <- which(is.na(GDSC2[drug,]))
 #drug_IC50<-GDSC_AUC_matrix[drug,][-whichNas]
