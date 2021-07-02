@@ -32,11 +32,10 @@ library(ridge)
 #geneNames <- do.call(cbind, strsplit(tpmDatMat_bc[, "Hybridization.REF"], "|", fixed=TRUE))[1,][-1]
 #rownames(tpmDatMat_bc_tpm) <- geneNames
 #colnames(tpmDatMat_bc_tpm) <- substr(colnames(tpmDatMat_bc_tpm), 1, 28)
-## 改这里
 ##tpmDatMat_bc_tpm_logged <- log((tpmDatMat_bc_tpm*1000000)+1)
 setwd("/extraspace/ychen42/Drug_Response/Data/")
-tpmDatMat_bc_tpm_logged <- load("TCGA_Log2_New.RData")
-
+load("TCGA_Log2_New.RData")
+tpmDatMat_bc_tpm_logged <- TCGA_Log2_New
 CCLE_2018<-read.delim("CCLE_RNAseq_genes_rpkm_20180929.gct.txt") ##56202*1019
 CCLE_2018<-CCLE_2018[,-1]
 
