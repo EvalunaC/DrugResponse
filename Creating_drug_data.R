@@ -23,17 +23,19 @@ library(qrnn)
 
 
 setwd("/extraspace/ychen42/Drug_Response/GROrignial/dataIn/rnaSeq/BRCA.Merge_rnaseqv2")
-tpmDatMat_bc <- read.delim("BRCA.rnaseqv2_data.txt", as.is=T)
-
-tpmDatMat_bc_tpm <- apply(tpmDatMat_bc[-1,which(tpmDatMat_bc[1,] == "scaled_estimate")], 2, as.numeric)
-tpmDatMat_bc_tpm <- tpmDatMat_bc[-1,which(tpmDatMat_bc[1,] == "scaled_estimate")]
-tpmDatMat_bc_tpm <- apply(tpmDatMat_bc_tpm, 2, as.numeric)
-geneNames <- do.call(cbind, strsplit(tpmDatMat_bc[, "Hybridization.REF"], "|", fixed=TRUE))[1,][-1]
-rownames(tpmDatMat_bc_tpm) <- geneNames
-colnames(tpmDatMat_bc_tpm) <- substr(colnames(tpmDatMat_bc_tpm), 1, 28)
-tpmDatMat_bc_tpm_logged <- log((tpmDatMat_bc_tpm*1000000)+1)
-
+#tpmDatMat_bc <- read.delim("BRCA.rnaseqv2_data.txt", as.is=T)
+#
+#tpmDatMat_bc_tpm <- apply(tpmDatMat_bc[-1,which(tpmDatMat_bc[1,] == "scaled_estimate")], 2, as.numeric)
+#tpmDatMat_bc_tpm <- tpmDatMat_bc[-1,which(tpmDatMat_bc[1,] == "scaled_estimate")]
+#tpmDatMat_bc_tpm <- apply(tpmDatMat_bc_tpm, 2, as.numeric)
+#geneNames <- do.call(cbind, strsplit(tpmDatMat_bc[, "Hybridization.REF"], "|", fixed=TRUE))[1,][-1]
+#rownames(tpmDatMat_bc_tpm) <- geneNames
+#colnames(tpmDatMat_bc_tpm) <- substr(colnames(tpmDatMat_bc_tpm), 1, 28)
+## 改这里
+##tpmDatMat_bc_tpm_logged <- log((tpmDatMat_bc_tpm*1000000)+1)
 setwd("/extraspace/ychen42/Drug_Response/Data/")
+tpmDatMat_bc_tpm_logged <- load("TCGA_Log2_New.RData")
+
 CCLE_2018<-read.delim("CCLE_RNAseq_genes_rpkm_20180929.gct.txt") ##56202*1019
 CCLE_2018<-CCLE_2018[,-1]
 

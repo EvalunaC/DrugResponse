@@ -20,9 +20,6 @@ cat(paste(Sys.time(),"==========","2. Random Forest Complete\n"))
 
 preds_ranger<-predict(model_ranger,testFrame)
 
-
-
-
 #############################################
 ############## 3. Principle Component Regression
 #############################################

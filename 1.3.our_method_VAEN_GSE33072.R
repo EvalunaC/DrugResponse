@@ -104,7 +104,6 @@ testFrame_homo <- data.frame(t(homData$test))
 #            "SVM",
 #            "Elastic Net")
 
-
 #======================== Prediction Homoly===============================
 preds_GR_homo<-predict(model_GR,testFrame_homo)
 preds_rf_homo<-predict(model_rf,testFrame_homo)
