@@ -1,24 +1,25 @@
 set.seed(1000)
 
-library(caret)
+#library(caret)
 
 library(pRRophetic)
 library(car)
+library(ridge)
 
-library(glmnet)
-library(dplyr)
-library(magrittr)
-library(MASS)
-library(data.table)
-library(parallel)
-library(boot)
-library(performance)
-library(caret)
-library(kernlab)
-library(robustbase)
-library(mgcv)
+#library(glmnet)
+#library(dplyr)
+#library(magrittr)
+#library(MASS)
+#library(data.table)
+#library(parallel)
+#library(boot)
+#library(performance)
+#library(caret)
+#library(kernlab)
+#library(robustbase)
+#library(mgcv)
 
-library(qrnn)
+#library(qrnn)
 
 
 
@@ -43,17 +44,24 @@ CCLE_2018_mat<-as.matrix(CCLE_2018)
 rownames(CCLE_2018_mat)<-GeneNameCCLE<-CCLE_2018_mat[,1]
 CCLE_2018_mat<-apply(CCLE_2018_mat[,-1],2,as.numeric)
 rownames(CCLE_2018_mat)<-GeneNameCCLE
-CCLE_2018_mat[1:3,1:3]
+
 colnames(CCLE_2018_mat) <- gsub("^X", "",  colnames(CCLE_2018_mat))
-cell_CCLE<- do.call(cbind, strsplit(colnames(CCLE_2018_mat), "_", fixed=TRUE))[1,] ## 1019
+B1<- do.call(cbind, strsplit(colnames(CCLE_2018_mat), "_", fixed=TRUE))[1,] ## 1019
+B2<-gsub("[[:punct:]]", " ", B1)
+B3<-gsub("[[:space:]]", "", B2)
+cell_CCLE<-toupper(B3)
 colnames(CCLE_2018_mat)<-cell_CCLE
+
+CCLE_2018_mat[1:3,1:3]
 
 GDSC2<-read.csv("GDSC2_IC50_matrix.csv", header=T,row.names=1)
 
 #GDSC2<-read.csv("GDSC2_matrix.csv", header=T,row.names=1)
 possibleDrugs2<-rownames(GDSC2) ##192
-A2<-gsub("[[:punct:]]", " ", colnames(GDSC2))
-colnames(GDSC2)<-gsub("[[:space:]]", "", A2) ##809
+A1<-gsub("[[:punct:]]", " ", colnames(GDSC))
+A2<-gsub("[[:space:]]", "", A1) ##809
+A3 <- gsub("^X", "",  A2)
+colnames(GDSC)<-toupper(A3)
 
 getCGPinfo_New<-function(drug){whichNas <- which(is.na(GDSC2[drug,]))
 #drug_IC50<-GDSC_AUC_matrix[drug,][-whichNas]
@@ -125,7 +133,8 @@ if (powerTransformPhenotype) {
 }
 
 trainFrame <- data.frame(Resp = trainingPtype, t(homData$train[keepRows,]))
-return(trainFrame)  }
+testFrame <- data.frame(t(homData$test[keepRows, ]))
+return(list(trainFrame,testFrame))  }
 
 
 
