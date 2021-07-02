@@ -135,7 +135,16 @@ trainFrame <- data.frame(Resp = trainingPtype, t(homData$train[keepRows,]))
 testFrame <- data.frame(t(homData$test[keepRows, ]))
 return(list(trainFrame,testFrame))  }
 
+#============= Save 192 drugs trainFrame and testFrame =======================
 
+for (i in 1:length(possibleDrugs2)){
+  drug_data <- getDrugData(possibleDrugs2[i])
+  trainFrame <- drug_data[[1]]
+  testFrame <- drug_data[[2]]
+  
+  trainFile <- paste("/extraspace/ychen42/Drug_Response/Data/Drug192_TrainTest/",possibleDrugs2[i],"_trainFrame.RData", sep="")
+  testFile <- paste("/extraspace/ychen42/Drug_Response/Data/Drug192_TrainTest/",possibleDrugs2[i],"_testFrame.RData", sep="")
 
-#input_medication_name <- "Vinblastine"
-#input_medication_name <- "Camptothecin"
+  save(trainFrame,file=trainFile)
+  save(testFrame,file=testFile)
+}
