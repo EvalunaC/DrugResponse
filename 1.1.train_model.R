@@ -20,7 +20,7 @@ library(ranger)
 library(kknn)
 set.seed(1)
 
-trainFrame_homo
+
 
 #train_model <- function(drug,trainFrame_homo,out_model_file){
 #

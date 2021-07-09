@@ -1,4 +1,4 @@
-source("Creating_drug_data.R")
+#source("Creating_drug_data.R")
 memory.limit(9999999999)
 
 
@@ -27,10 +27,11 @@ library(rfinterval)
 # To run: build_stateval(drug=drug,trainFrame=drug_data[[1]],testFrame=drug_data[[2]])
 
 build_stateval <- function(drug,trainFrame,testFrame){
+
   #==================================================
   #========   1.0.0. Validation Function
   #==================================================
-eval_result_train<-function(preds){
+  eval_result_train<-function(preds){
     MAE <- mean(abs(trainFrame$Resp - preds))
     SSE <- sum((trainFrame$Resp - preds)^2)
     SST <- sum((trainFrame$Resp - mean(trainFrame$Resp))^2)
@@ -53,7 +54,6 @@ eval_result_train<-function(preds){
       results<-data.frame(RMSE=RMSE,MAE=MAE,R2_simp=R2_simp,R2_corr=R2_corr)
       return(results)
     }
-
   #==================================================
   #========    1.0.1. Building Models
   #==================================================
@@ -79,7 +79,6 @@ cat(paste(Sys.time(),"==========","Random Forest Ranger Start...\n"))
 #model_ranger<-train(Resp~.,data=trainFrame,num.trees = 50,method="ranger",trControl = trainControl(method = "oob", seed = list(c(1,1,1,1,1,1),c(1,1,1,1,1,1))))
 model_ranger<-ranger(Resp~.,data=trainFrame,num.trees = 50,splitrule="variance",seed =1)
 
-
 cat(paste(Sys.time(),"==========","Principle Component Regression Start...\n"))
 model_pcr<-train(Resp~.,data=trainFrame,method="pcr")#,importance=TRUE)
 
@@ -88,8 +87,8 @@ model_pls<-train(Resp~.,data=trainFrame,method="pls")#,importance=TRUE)
 
 cat(paste(Sys.time(),"==========","K-nearest neighbors (KNN) algorithm Start...\n"))
 model_KNN<-train(Resp~.,data=trainFrame,method="knn",trControl=trainControl("cv",number=10))
-cat(paste(Sys.time(),"==========","Weighted K-nearest neighbors (KNN) algorithm Start...\n"))
 
+cat(paste(Sys.time(),"==========","Weighted K-nearest neighbors (KNN) algorithm Start...\n"))
 model_KKNN<-train(Resp~.,data=trainFrame,method="kknn",trControl=trainControl("cv",number=10))
 
 cat(paste(Sys.time(),"==========","Support vector machine regression Start...\n"))
@@ -97,11 +96,6 @@ model_svm<-train(Resp~.,data=trainFrame,method = 'svmLinear2')#,importance=TRUE)
 
 cat(paste(Sys.time(),"==========","Treebag (bootstrap aggregating) algorithm Start...\n"))
 model_treebag<-train(Resp~.,data=trainFrame,method = 'treebag')
-#treebag_result<-eval_result
-#(preds_treebag)
-#treebag_result$method <- "Treebag (bootstrap aggregating) algorithm"
-#treebag_result$drug <- drug
-#cat(paste(Sys.time(),"==========","9. Treebag (bootstrap aggregating) algorithm Complete\n"))
 
 cat(paste(Sys.time(),"==========","Elastic Net Regression Start...\n"))
 model_EN<-train(Resp~.,data=trainFrame,method="glmnet",trControl=trainControl("cv",number=10))
@@ -119,16 +113,16 @@ model_Lasso_1<- glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alp
 #### Regression-Enhanced Random Forests, "Predictive Inference for Random Forests" RF+Lasso
 cat(paste(Sys.time(),"==========","Predictive Inference for Random Forests (oob) Start...\n"))
 
-model_rfinv1<- rfinterval(Resp~.,train_data=trainFrame, test_data = testFrame,
+model_rfinv1<- rfinterval(Resp~.,train_data=trainFrame, test_data = trainFrame[,-1],
                          method = "oob", alpha = 0.05,
                          symmetry = TRUE)
 
 cat(paste(Sys.time(),"==========","Predictive Inference for Random Forests (split-conformal) Start...\n"))
-model_rfinv2<- rfinterval(Resp~.,train_data=trainFrame, test_data = testFrame,
+model_rfinv2<- rfinterval(Resp~.,train_data=trainFrame, test_data = trainFrame[,-1],
                          method = "split-conformal", alpha = 0.05,
                          seed = 1)
 cat(paste(Sys.time(),"==========","Predictive Inference for Random Forests (quantreg) Start...\n"))
-model_rfinv3<- rfinterval(Resp~.,train_data=trainFrame, test_data = testFrame,
+model_rfinv3<- rfinterval(Resp~.,train_data=trainFrame, test_data = trainFrame[,-1],
                          method = "quantreg", alpha = 0.05)
 
   #==================================================
@@ -153,14 +147,6 @@ method_list <- c("GR paper linear Ridge",
 
 
 #===========  1.0.2.1 Using trainFrame   =========================================
-model_rfinv1<- rfinterval(Resp~.,train_data=trainFrame, test_data = trainFrame[,-1],
-                        method = "oob", alpha = 0.05,
-                        symmetry = TRUE)
-model_rfinv2<- rfinterval(Resp~.,train_data=trainFrame, test_data = trainFrame[,-1],
-                        method = "split-conformal", alpha = 0.05,
-                        seed = 1)
-model_rfinv3<- rfinterval(Resp~.,train_data=trainFrame, test_data = trainFrame[,-1],
-                        method = "quantreg", alpha = 0.05)
 
 preds_GR<-predict(model_GR,trainFrame[,-1])
 preds_rf<-predict(model_rf,trainFrame[,-1])
@@ -204,75 +190,86 @@ for (i in 1:length(method_list)){
 }
 Stat_table$drug <- drug
 df <- Stat_table[,c("method","drug","RMSE","MAE","R2_simp","R2_corr")]
-name <- paste("/extraspace/ychen42/Drug_Response/Own_update2.0/Evaluation/",drug,"_4Stats.csv", sep="",collapse = NULL)
+name <- paste("/extraspace/ychen42/Drug_Response/Own_update2.0/Evaluation/4Stats_eachdrug/",drug,"_4Stats.csv", sep="",collapse = NULL)
 write.csv(df,name, quote=FALSE)
 
 cat(paste(Sys.time(),"Stat_table saved as /extraspace/ychen42/Drug_Response/Own_update2.0/Evaluation/..._4Stats.csv \n"))
-
-#===========  1.0.2.2 Using testFrame   =========================================
-preds_GR<-predict(model_GR,testFrame)
-preds_rf<-predict(model_rf,testFrame)
-preds_ranger<-predict(model_ranger,testFrame)
-
-preds_pcr<-predict(model_pcr,testFrame)
-preds_pls<-predict(model_pls,testFrame)
-preds_ridgeglm <- predict(model_ridgeglm, s = best_lam_0, newx=as.matrix(testFrame))
-preds_Lasso_1 <- predict(model_Lasso_1, s = best_lam_1, newx=as.matrix(testFrame))
-preds_knn<-predict(model_KNN,testFrame)
-preds_svm<-predict(model_svm,testFrame)
-preds_treebag<-predict(model_treebag,testFrame)
-preds_EN<-predict(model_EN,testFrame)
-preds_kknn<-predict(model_KKNN,testFrame)
-preds_rfinv1 <- model_rfinv1$testPred
-preds_rfinv2 <- model_rfinv2$testPred
-preds_rfinv3 <- model_rfinv3$testPred
-
-preds_from_testFrame<- list(preds_GR,
-            preds_rf,
-            preds_ranger$predictions,
-            preds_pcr,
-            preds_pls,
-            preds_ridgeglm,
-            preds_Lasso_1,
-            preds_knn,
-            preds_kknn,
-            preds_svm,
-            preds_treebag,
-            preds_EN,
-            model_rfinv1$testPred,
-            model_rfinv2$testPred,
-            model_rfinv3$testPred)
-
-filename = paste("/extraspace/ychen42/Drug_Response/Own_update2.0/Models/",drug,"_preds_from_testFrame.RData", sep="",collapse = NULL)
-save(preds_from_testFrame, method_list, file=filename)
-
-cat(paste(Sys.time(),"testFrame pred saved as /extraspace/ychen42/Drug_Response/Own_update2.0/Models/..._preds_from_testFrame.RData\n"))
-
-return(list(preds_from_trainFrame,preds_from_testFrame,Stat_table))
-
 }
+##===========  1.0.2.2 Potential: Using testFrame   =========================================
+#preds_GR<-predict(model_GR,testFrame)
+#preds_rf<-predict(model_rf,testFrame)
+#preds_ranger<-predict(model_ranger,testFrame)
+#
+#preds_pcr<-predict(model_pcr,testFrame)
+#preds_pls<-predict(model_pls,testFrame)
+#preds_ridgeglm <- predict(model_ridgeglm, s = best_lam_0, newx=as.matrix(testFrame))
+#preds_Lasso_1 <- predict(model_Lasso_1, s = best_lam_1, newx=as.matrix(testFrame))
+#preds_knn<-predict(model_KNN,testFrame)
+#preds_svm<-predict(model_svm,testFrame)
+#preds_treebag<-predict(model_treebag,testFrame)
+#preds_EN<-predict(model_EN,testFrame)
+#preds_kknn<-predict(model_KKNN,testFrame)
+#
+#model_rfinv1<- rfinterval(Resp~.,train_data=trainFrame, test_data = testFrame,
+#                        method = "oob", alpha = 0.05,
+#                        symmetry = TRUE)
+#model_rfinv2<- rfinterval(Resp~.,train_data=trainFrame, test_data = testFrame,
+#                        method = "split-conformal", alpha = 0.05,
+#                        seed = 1)
+#model_rfinv3<- rfinterval(Resp~.,train_data=trainFrame, test_data = testFrame,
+#                        method = "quantreg", alpha = 0.05)
+#
+#preds_rfinv1 <- model_rfinv1$testPred
+#preds_rfinv2 <- model_rfinv2$testPred
+#preds_rfinv3 <- model_rfinv3$testPred
+#
+#preds_from_testFrame<- list(preds_GR,
+#            preds_rf,
+#            preds_ranger$predictions,
+#            preds_pcr,
+#            preds_pls,
+#            preds_ridgeglm,
+#            preds_Lasso_1,
+#            preds_knn,
+#            preds_kknn,
+#            preds_svm,
+#            preds_treebag,
+#            preds_EN,
+#            model_rfinv1$testPred,
+#            model_rfinv2$testPred,
+#            model_rfinv3$testPred)
+#
+#filename = paste("/extraspace/ychen42/Drug_Response/Own_update2.0/Models/#",drug,"_preds_from_testFrame.RData", sep="",collapse = NULL)
+#save(preds_from_testFrame, method_list, file=filename)
+#
+#cat(paste(Sys.time(),"testFrame pred saved as /extraspace/ychen42/Drug_Response/Own_update2.0/Models/#..._preds_from_testFrame.RData\n"))
+#
+#return(list(preds_from_trainFrame,preds_from_testFrame,Stat_table))
+#
+
+#}
 
 #====================  End of function "build_stateval" ===============
 
 #==================================================
 #===   Potential:    1.0.5. Saving models (use in function)
 #==================================================
-setwd("/extraspace/ychen42/Drug_Response/Own_update2.0/Models/")
-
-saveRDS(model_GR,paste(drug,"_model_GR.rds", sep="",collapse = NULL))
-saveRDS(model_rf,paste(drug,"_model_rf.rds", sep="",collapse = NULL))
-saveRDS(model_ranger,paste(drug,"_model_ranger.rds", sep="",collapse = NULL))
-saveRDS(model_pcr,paste(drug,"_model_pcr.rds", sep="",collapse = NULL))
-saveRDS(model_pls,paste(drug,"_model_pls.rds", sep="",collapse = NULL))
-saveRDS(model_ridgeglm,paste(drug,"_model_ridgeglm.rds", sep="",collapse = NULL))
-saveRDS(model_Lasso_1,paste(drug,"_model_Lasso_1.rds", sep="",collapse = NULL))
-saveRDS(model_KNN,paste(drug,"_model_KNN.rds", sep="",collapse = NULL))
-saveRDS(model_svm,paste(drug,"_model_svm.rds", sep="",collapse = NULL))
-saveRDS(model_treebag,paste(drug,"_model_treebag.rds", sep="",collapse = NULL))
-saveRDS(model_EN,paste(drug,"_model_EN.rds", sep="",collapse = NULL))
-saveRDS(model_KKNN,paste(drug,"_model_KKNN.rds", sep="",collapse = NULL))
-saveRDS(model_rfinv1,paste(drug,"_model_rfinv1.rds", sep="",collapse = NULL))
-saveRDS(model_rfinv2,paste(drug,"_model_rfinv2.rds", sep="",collapse = NULL))
-saveRDS(model_rfinv3,paste(drug,"_model_rfinv3.rds", sep="",collapse = NULL))
+#setwd("/extraspace/ychen42/Drug_Response/Own_update2.0/Models/")
+#
+#saveRDS(model_GR,paste(drug,"_model_GR.rds", sep="",collapse = NULL))
+#saveRDS(model_rf,paste(drug,"_model_rf.rds", sep="",collapse = NULL))
+#saveRDS(model_ranger,paste(drug,"_model_ranger.rds", sep="",collapse = NULL))
+#saveRDS(model_pcr,paste(drug,"_model_pcr.rds", sep="",collapse = NULL))
+#saveRDS(model_pls,paste(drug,"_model_pls.rds", sep="",collapse = NULL))
+#saveRDS(model_ridgeglm,paste(drug,"_model_ridgeglm.rds", sep="",collapse = NULL))
+#saveRDS(model_Lasso_1,paste(drug,"_model_Lasso_1.rds", sep="",collapse = NULL))
+#saveRDS(model_KNN,paste(drug,"_model_KNN.rds", sep="",collapse = NULL))
+#saveRDS(model_svm,paste(drug,"_model_svm.rds", sep="",collapse = NULL))
+#saveRDS(model_treebag,paste(drug,"_model_treebag.rds", sep="",collapse = NULL))
+#saveRDS(model_EN,paste(drug,"_model_EN.rds", sep="",collapse = NULL))
+#saveRDS(model_KKNN,paste(drug,"_model_KKNN.rds", sep="",collapse = NULL))
+#saveRDS(model_rfinv1,paste(drug,"_model_rfinv1.rds", sep="",collapse = NULL))
+#saveRDS(model_rfinv2,paste(drug,"_model_rfinv2.rds", sep="",collapse = NULL))
+#saveRDS(model_rfinv3,paste(drug,"_model_rfinv3.rds", sep="",collapse = NULL))
 
 #To read: super_model <- readRDS("./final_model.rds")

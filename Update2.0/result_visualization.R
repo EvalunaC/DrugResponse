@@ -1,24 +1,27 @@
 
 #==================================================
-#===   Potential:    1.0.3. Plotting evaluation stats
+#===   Evaluation stats boxplot
 #==================================================
-
-
-Stat_table$RMSE_negative <- -Stat_table$RMSE
-Stat_table$MAE_negative <- -Stat_table$MAE
 
 library("ggpubr")
 library(ggplot2)
 require(gridExtra)
 library(cowplot)
 
+Stat_table <- read.csv("/extraspace/ychen42/Drug_Response/Own_update2.0/Evaluation/192drugs_4Stats.csv", header = TRUE,na.strings="NA")
+
+Stat_table$RMSE_negative <- -Stat_table$RMSE
+Stat_table$MAE_negative <- -Stat_table$MAE
+
+Stat_table<- Stat_table[!is.na(Stat_table$R2_corr),]
+
 plot_RMSE_negative <- ggboxplot(Stat_table, x = "method", y = "RMSE_negative",
-          color = "method", ylim = c(-1,0),font.label = list(size = 6),
+          color = "method", ylim = c(-5,0),font.label = list(size = 6),
           ylab = "Negative RMSE \n (Greater is better)")+ rremove("x.text")+ rremove("xlab")+ rremove("legend")
 #   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5))
 
 plot_MAE_negative <- ggboxplot(Stat_table, x = "method", y = "MAE_negative",
-          color = "method", ylim = c(-1,0),
+          color = "method", ylim = c(-5,0),
           ylab = "Negative MAE \n(Greater is better)", xlab = "method",repel=TRUE)+ rremove("x.text")+ rremove("xlab")+ rremove("legend")
 
 plot_R_Square <- ggboxplot(Stat_table, x = "method", y = "R2_simp",
@@ -37,7 +40,7 @@ plot_R2_corr <- ggboxplot(Stat_table, x = "method", y = "R2_corr",
 
 #tapply(result0$R_Square, result0$method, summary)
 
-filename = paste("/extraspace/ychen42/Drug_Response/Own_update2.0/Output/",drug,"_4stats_boxplot.pdf", sep="",collapse = NULL)
+filename = paste("/extraspace/ychen42/Drug_Response/Own_update2.0/Evaluation/192drugs_4Stats_boxplot07072021.pdf", sep="",collapse = NULL)
 pdf(filename,width=10, height=15)
 plot_grid(plot_RMSE_negative,
           plot_MAE_negative,
@@ -45,10 +48,10 @@ plot_grid(plot_RMSE_negative,
           plot_R2_corr,
           align = "v",
           nrow = 4,
-          rel_heights = c(1/5,1/5,1/5,2/5))
+          rel_heights = c(22/100,22/100,22/100,34/100))
 dev.off()
 #==================================================
-#===   Potential:    1.0.4. Plotting prediction correlation
+#===   Potential:    1.0.4. Plotting prediction correlation (for one drug)
 #==================================================
 library("PerformanceAnalytics")
 preds_df<- data.frame(GR=as.numeric(preds_GR),
@@ -67,7 +70,7 @@ preds_df<- data.frame(GR=as.numeric(preds_GR),
             svm=as.numeric(preds_svm),
             tree=as.numeric(preds_treebag)
           )
-filename = paste("/extraspace/ychen42/Drug_Response/Own_update2.0/Output/",drug,"_preds_correlation.pdf", sep="",collapse = NULL)
+filename = paste("/extraspace/ychen42/Drug_Response/Own_update2.0/Evaluation/192drugs_preds_correlation.pdf", sep="",collapse = NULL)
 pdf(filename,width=15, height=15)
 chart.Correlation(preds_df, histogram=TRUE)
 dev.off()

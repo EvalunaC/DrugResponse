@@ -31,6 +31,7 @@ model_KNN<-train(Resp~.,data=trainFrame,method="knn",trControl=trainControl("cv"
 model_svm<-train(Resp~.,data=trainFrame,method = 'svmLinear2',importance=TRUE)
 model_EN<-train(Resp~.,data=trainFrame,method="glmnet",trControl=trainControl("cv",number=10))
 
+
 methods_model<- list(model_GR,model_rf,model_pcr,model_pls,model_KNN,model_svm,model_EN,model_ridgeglm,model_Lasso_1)
 methods <- c("GR paper linear Ridge",
             "Random Forest",
@@ -83,4 +84,26 @@ print(t.test(bcaPreds[sampsInBothDatasets][her2Neg], bcaPreds[sampsInBothDataset
 
 boxplot(list(Negative=bcaPreds[sampsInBothDatasets][her2Neg], Equivocal=bcaPreds[sampsInBothDatasets][her2Equiv], Positive=bcaPreds[sampsInBothDatasets][her2Pos]), las=1, col=c("#66c2a5", "#fc8d62", "#8da0cb"), pch=20, width=c(.75, .75, .75), ylab="Predicted Lapatinib Sensitivity", xlab=paste(methods[i], "\n Wilcoxon rank sum p = ", signif(wiltest$p.value,digits = 3), sep=""),cex.axis=.75, outcol="#00000033")
 }
+dev.off()
+
+
+
+pdf("/extraspace/ychen42/Drug_Response/yiqings_work/BRCA_boxplot_clinical_ranger.pdf")
+seeds<- list(c(1,1,1,1,1,1), c(1,1,1,1,1,1))
+model_ranger<-train(Resp~.,data=trainFrame,num.trees = 50,method="ranger",trControl = trainControl(method = "oob", seed = seeds))
+
+bcaPreds<-predict(model_ranger,testFrame)
+
+bcaPreds <- bcaPreds[theTumorSamples] # Only include the tumor samples in this analysis. Results on normal samples are meaningless.
+sampsInBothDatasets <- clinDataBrca[, "bcr_patient_barcode"][clinDataBrca[, "bcr_patient_barcode"] %in% newNames]
+sampsInBothDatasets_TF <- clinDataBrca[, "bcr_patient_barcode"] %in% newNames
+
+her2Neg <- which(her2status[sampsInBothDatasets_TF] == "Negative")
+her2Pos <- which(her2status[sampsInBothDatasets_TF] == "Positive")
+her2Equiv <- which(her2status[sampsInBothDatasets_TF] == "Equivocal")
+(wiltest <- wilcox.test(bcaPreds[sampsInBothDatasets][her2Neg], bcaPreds[sampsInBothDatasets][her2Pos]))
+print(t.test(bcaPreds[sampsInBothDatasets][her2Neg], bcaPreds[sampsInBothDatasets][her2Pos]))
+
+boxplot(list(Negative=bcaPreds[sampsInBothDatasets][her2Neg], Equivocal=bcaPreds[sampsInBothDatasets][her2Equiv], Positive=bcaPreds[sampsInBothDatasets][her2Pos]), las=1, col=c("#66c2a5", "#fc8d62", "#8da0cb"), pch=20, width=c(.75, .75, .75), ylab="Predicted Lapatinib Sensitivity", xlab=paste(methods[i], "\n Wilcoxon rank sum p = ", signif(wiltest$p.value,digits = 3), sep=""),cex.axis=.75, outcol="#00000033")
+
 dev.off()
