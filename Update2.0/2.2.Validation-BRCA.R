@@ -74,6 +74,11 @@ testFrame <- data.frame(t(homData$test[keepRows, ]))
 #> dim(testFrame)
 #[1]  1104 13225
 
+trainFile <- "/extraspace/ychen42/Drug_Response/Data/BRCA_trainFrame_20210726.RData"
+testFile <- "/extraspace/ychen42/Drug_Response/Data/BRCA_testFrame_20210726.RData"
+
+save(trainFrame,file=trainFile)
+save(testFrame,file=testFile)
 #========================================
 #  Then use  ==1.0.1. Building Models==
 #========================================
