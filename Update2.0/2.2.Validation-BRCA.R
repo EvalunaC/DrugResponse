@@ -12,7 +12,7 @@ library(ridge)
 #source("/extraspace/ychen42/Drug_Response/Own_update2.0/some_code/0.1.Creating_drug_data.R")
 #source("/extraspace/ychen42/Drug_Response/Own_update2.0/some_code/1.0.build_models_stateva.R")
 
-load("/extraspace/ychen42/Drug_Response/Data/Drug192_TrainTest/Lapatinib_trainFrame.RData")
+#load("/extraspace/ychen42/Drug_Response/Data/Drug192_TrainTest/Lapatinib_trainFrame.RData")
 load("/extraspace/ychen42/Drug_Response/Data/BRCA.RData")
 
 
