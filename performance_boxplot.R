@@ -115,7 +115,6 @@ ggboxplot(subset(pcc, !is.na(cv28_pcc)), x = "methods", y = "cv28_pcc",
 
 
 
-
 radarchart(result)
 
 create_beautiful_radarchart(

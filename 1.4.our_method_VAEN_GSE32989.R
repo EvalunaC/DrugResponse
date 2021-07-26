@@ -100,8 +100,6 @@ testFrame_homo <- data.frame(t(homData$test))
 
 
 
-
-
 shared_genes = intersect(colnames(trainFrame), rownames(expr.mat))
 print( length(shared_genes) )
 
