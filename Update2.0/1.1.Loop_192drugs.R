@@ -1,5 +1,7 @@
-source("Creating_drug_data.R")
-source("1.0.build_models_stateva.R")
+setwd("/extraspace/ychen42/Drug_Response/Own_update2.0/some_code/")
+
+source("0.1.Creating_drug_data.R")
+source("/extraspace/ychen42/Drug_Response/Own_update2.0/some_code/1.0.build_models_stateva.R")
 
 
 #==================================================
@@ -10,11 +12,23 @@ library(doMC)
 options(cores = 25)
 registerDoMC()
 
+#drug="Lapatinib"
+drug="NVP-ADW742"
+drug_data <- getDrugData(drug)
+
+169
 for (i in 1:length(possibleDrugs2)){
+  drug=possibleDrugs2[i]
+  drug_data <- getDrugData(drug)[[1]]
+  build_stateval(drug=drug,trainFrame=drug_data,testFrame=drug_data[,-1],outFolder="/extraspace/ychen42/Drug_Response/Own_update2.0/Evaluation/4Stats_eachdrug/")
+}
+
+for (i in 169:length(possibleDrugs2)){
   drug=possibleDrugs2[i]
   drug_data <- getDrugData(drug)
   build_stateval(drug=drug,trainFrame=drug_data[[1]],testFrame=drug_data[[2]])
 }
+
 
 #==================================================
 #========   1.1.2. Generate combined result

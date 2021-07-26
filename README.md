@@ -27,3 +27,6 @@ conda install -c conda-forge r-performanceanalytics
 conda install -c r r-caret
 
 conda install -c anaconda libopenblas
+
+conda install -c bioconda bioconductor-tcgabiolinks
+conda install -c conda-forge r-pdftools 

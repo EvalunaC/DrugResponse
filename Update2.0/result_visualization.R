@@ -8,6 +8,8 @@ library(ggplot2)
 require(gridExtra)
 library(cowplot)
 
+
+
 Stat_table <- read.csv("/extraspace/ychen42/Drug_Response/Own_update2.0/Evaluation/192drugs_4Stats.csv", header = TRUE,na.strings="NA")
 
 Stat_table$RMSE_negative <- -Stat_table$RMSE

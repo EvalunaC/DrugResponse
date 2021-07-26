@@ -26,7 +26,24 @@ library(rfinterval)
 
 # To run: build_stateval(drug=drug,trainFrame=drug_data[[1]],testFrame=drug_data[[2]])
 
-build_stateval <- function(drug,trainFrame,testFrame){
+method_list <- c("GR paper linear Ridge",
+              "Random Forest",
+              "Random Forest (Ranger)",
+              "Principle Component Regression",
+              "Partial Least Square",
+              "Ridge GLM",
+              "Lasso GLM",
+              "K-nearest neighbors ",
+              "Weighted K-nearest neighbors ",
+              "Support Vector Machine",
+              "Treebag (bootstrap aggregating)",
+              "Elastic Net",
+              "RF+Lasso2019(out-of-bag)",
+              "RF+Lasso2019(split-conformal)",
+              "RF+Lasso2019(quantile regression forest)"
+              )
+
+build_stateval <- function(drug,trainFrame,testFrame=trainFrame[,-1],outFolder){ # trainFrame[,-1] is default test set
 
   #==================================================
   #========   1.0.0. Validation Function
@@ -113,117 +130,44 @@ model_Lasso_1<- glmnet(as.matrix(trainFrame[,-1]),as.matrix(trainFrame$Resp),alp
 #### Regression-Enhanced Random Forests, "Predictive Inference for Random Forests" RF+Lasso
 cat(paste(Sys.time(),"==========","Predictive Inference for Random Forests (oob) Start...\n"))
 
-model_rfinv1<- rfinterval(Resp~.,train_data=trainFrame, test_data = trainFrame[,-1],
+model_rfinv1<- rfinterval(Resp~.,train_data=trainFrame, test_data = testFrame,
                          method = "oob", alpha = 0.05,
                          symmetry = TRUE)
 
 cat(paste(Sys.time(),"==========","Predictive Inference for Random Forests (split-conformal) Start...\n"))
-model_rfinv2<- rfinterval(Resp~.,train_data=trainFrame, test_data = trainFrame[,-1],
+model_rfinv2<- rfinterval(Resp~.,train_data=trainFrame, test_data = testFrame,
                          method = "split-conformal", alpha = 0.05,
                          seed = 1)
 cat(paste(Sys.time(),"==========","Predictive Inference for Random Forests (quantreg) Start...\n"))
-model_rfinv3<- rfinterval(Resp~.,train_data=trainFrame, test_data = trainFrame[,-1],
+model_rfinv3<- rfinterval(Resp~.,train_data=trainFrame, test_data = testFrame,
                          method = "quantreg", alpha = 0.05)
 
   #==================================================
   #===       1.0.2. Prediction & Evaluation
   #==================================================
-method_list <- c("GR paper linear Ridge",
-              "Random Forest",
-              "Random Forest (Ranger)",
-              "Principle Component Regression",
-              "Partial Least Square",
-              "Ridge GLM",
-              "Lasso GLM",
-              "K-nearest neighbors ",
-              "Weighted K-nearest neighbors ",
-              "Support Vector Machine",
-              "Treebag (bootstrap aggregating)",
-              "Elastic Net",
-              "RF+Lasso2019(out-of-bag)",
-              "RF+Lasso2019(split-conformal)",
-              "RF+Lasso2019(quantile regression forest)"
-              )
 
 
 #===========  1.0.2.1 Using trainFrame   =========================================
 
-preds_GR<-predict(model_GR,trainFrame[,-1])
-preds_rf<-predict(model_rf,trainFrame[,-1])
-preds_ranger<-predict(model_ranger,trainFrame[,-1])
-
-preds_pcr<-predict(model_pcr,trainFrame[,-1])
-preds_pls<-predict(model_pls,trainFrame[,-1])
-preds_ridgeglm <- predict(model_ridgeglm, s = best_lam_0, newx=as.matrix(trainFrame[,-1]))
-preds_Lasso_1 <- predict(model_Lasso_1, s = best_lam_1, newx=as.matrix(trainFrame[,-1]))
-preds_knn<-predict(model_KNN,trainFrame[,-1])
-preds_svm<-predict(model_svm,trainFrame[,-1])
-preds_treebag<-predict(model_treebag,trainFrame[,-1])
-preds_EN<-predict(model_EN,trainFrame[,-1])
-preds_kknn<-predict(model_KKNN,trainFrame[,-1])
-
-preds_rfinv1 <- model_rfinv1$testPred
-preds_rfinv2 <- model_rfinv2$testPred
-preds_rfinv3 <- model_rfinv3$testPred
-
-preds_from_trainFrame<- list(preds_GR,
-            preds_rf,
-            preds_ranger$predictions,
-            preds_pcr,
-            preds_pls,
-            preds_ridgeglm,
-            preds_Lasso_1,
-            preds_knn,
-            preds_kknn,
-            preds_svm,
-            preds_treebag,
-            preds_EN,
-            model_rfinv1$testPred,
-            model_rfinv2$testPred,
-            model_rfinv3$testPred)
-
-Stat_table <- data.frame()
-for (i in 1:length(method_list)){
-    Stat_table0 <- eval_result_train(preds=preds_from_trainFrame[[i]])
-    Stat_table0$method <- method_list[i]
-    Stat_table <- rbind(Stat_table,Stat_table0)
-}
-Stat_table$drug <- drug
-df <- Stat_table[,c("method","drug","RMSE","MAE","R2_simp","R2_corr")]
-name <- paste("/extraspace/ychen42/Drug_Response/Own_update2.0/Evaluation/4Stats_eachdrug/",drug,"_4Stats.csv", sep="",collapse = NULL)
-write.csv(df,name, quote=FALSE)
-
-cat(paste(Sys.time(),"Stat_table saved as /extraspace/ychen42/Drug_Response/Own_update2.0/Evaluation/..._4Stats.csv \n"))
-}
-##===========  1.0.2.2 Potential: Using testFrame   =========================================
-#preds_GR<-predict(model_GR,testFrame)
-#preds_rf<-predict(model_rf,testFrame)
-#preds_ranger<-predict(model_ranger,testFrame)
+#preds_GR<-predict(model_GR,trainFrame[,-1])
+#preds_rf<-predict(model_rf,trainFrame[,-1])
+#preds_ranger<-predict(model_ranger,trainFrame[,-1])
 #
-#preds_pcr<-predict(model_pcr,testFrame)
-#preds_pls<-predict(model_pls,testFrame)
-#preds_ridgeglm <- predict(model_ridgeglm, s = best_lam_0, newx=as.matrix(testFrame))
-#preds_Lasso_1 <- predict(model_Lasso_1, s = best_lam_1, newx=as.matrix(testFrame))
-#preds_knn<-predict(model_KNN,testFrame)
-#preds_svm<-predict(model_svm,testFrame)
-#preds_treebag<-predict(model_treebag,testFrame)
-#preds_EN<-predict(model_EN,testFrame)
-#preds_kknn<-predict(model_KKNN,testFrame)
-#
-#model_rfinv1<- rfinterval(Resp~.,train_data=trainFrame, test_data = testFrame,
-#                        method = "oob", alpha = 0.05,
-#                        symmetry = TRUE)
-#model_rfinv2<- rfinterval(Resp~.,train_data=trainFrame, test_data = testFrame,
-#                        method = "split-conformal", alpha = 0.05,
-#                        seed = 1)
-#model_rfinv3<- rfinterval(Resp~.,train_data=trainFrame, test_data = testFrame,
-#                        method = "quantreg", alpha = 0.05)
+#preds_pcr<-predict(model_pcr,trainFrame[,-1])
+#preds_pls<-predict(model_pls,trainFrame[,-1])
+#preds_ridgeglm <- predict(model_ridgeglm, s = best_lam_0, newx=as.matrix(trainFrame[,-1]))
+#preds_Lasso_1 <- predict(model_Lasso_1, s = best_lam_1, newx=as.matrix(trainFrame[,-1]))
+#preds_knn<-predict(model_KNN,trainFrame[,-1])
+#preds_svm<-predict(model_svm,trainFrame[,-1])
+#preds_treebag<-predict(model_treebag,trainFrame[,-1])
+#preds_EN<-predict(model_EN,trainFrame[,-1])
+#preds_kknn<-predict(model_KKNN,trainFrame[,-1])
 #
 #preds_rfinv1 <- model_rfinv1$testPred
 #preds_rfinv2 <- model_rfinv2$testPred
 #preds_rfinv3 <- model_rfinv3$testPred
 #
-#preds_from_testFrame<- list(preds_GR,
+#preds_from_trainFrame<- list(preds_GR,
 #            preds_rf,
 #            preds_ranger$predictions,
 #            preds_pcr,
@@ -239,15 +183,78 @@ cat(paste(Sys.time(),"Stat_table saved as /extraspace/ychen42/Drug_Response/Own_
 #            model_rfinv2$testPred,
 #            model_rfinv3$testPred)
 #
-#filename = paste("/extraspace/ychen42/Drug_Response/Own_update2.0/Models/#",drug,"_preds_from_testFrame.RData", sep="",collapse = NULL)
-#save(preds_from_testFrame, method_list, file=filename)
-#
-#cat(paste(Sys.time(),"testFrame pred saved as /extraspace/ychen42/Drug_Response/Own_update2.0/Models/#..._preds_from_testFrame.RData\n"))
-#
-#return(list(preds_from_trainFrame,preds_from_testFrame,Stat_table))
-#
-
+#Stat_table <- data.frame()
+#for (i in 1:length(method_list)){
+#    Stat_table0 <- eval_result_train(preds=preds_from_trainFrame[[i]])
+#    Stat_table0$method <- method_list[i]
+#    Stat_table <- rbind(Stat_table,Stat_table0)
 #}
+#Stat_table$drug <- drug
+#df <- Stat_table[,c("method","drug","RMSE","MAE","R2_simp","R2_corr")]
+#name <- paste(outFolder,drug,"_4Stats.csv", sep="",collapse = NULL)
+#write.csv(df,name, quote=FALSE)
+#
+#cat(paste(Sys.time(),"Stat_table saved as ",outFolder,"/..._4Stats.csv \n", sep="",collapse = NULL))
+#}
+#
+#
+###===========  1.0.2.2 Potential: Using testFrame   =========================================
+preds_GR<-predict(model_GR,testFrame)
+preds_rf<-predict(model_rf,testFrame)
+preds_ranger<-predict(model_ranger,testFrame)
+
+preds_pcr<-predict(model_pcr,testFrame)
+preds_pls<-predict(model_pls,testFrame)
+preds_ridgeglm <- predict(model_ridgeglm, s = best_lam_0, newx=as.matrix(testFrame))
+preds_Lasso_1 <- predict(model_Lasso_1, s = best_lam_1, newx=as.matrix(testFrame))
+preds_knn<-predict(model_KNN,testFrame)
+preds_svm<-predict(model_svm,testFrame)
+preds_treebag<-predict(model_treebag,testFrame)
+preds_EN<-predict(model_EN,testFrame)
+preds_kknn<-predict(model_KKNN,testFrame)
+
+preds_rfinv1 <- model_rfinv1$testPred
+preds_rfinv2 <- model_rfinv2$testPred
+preds_rfinv3 <- model_rfinv3$testPred
+
+preds_from_testFrame<- list(preds_GR,
+            preds_rf,
+            preds_ranger$predictions,
+            preds_pcr,
+            preds_pls,
+            preds_ridgeglm,
+            preds_Lasso_1,
+            preds_knn,
+            preds_kknn,
+            preds_svm,
+            preds_treebag,
+            preds_EN,
+            model_rfinv1$testPred,
+            model_rfinv2$testPred,
+            model_rfinv3$testPred)
+
+  Stat_table <- data.frame()
+  for (i in 1:length(method_list)){
+    Stat_table0 <- eval_result_train(preds=preds_from_testFrame[[i]])
+    Stat_table0$method <- method_list[i]
+    Stat_table <- rbind(Stat_table,Stat_table0)
+  }
+  Stat_table$drug <- drug
+  #  Stat_table$test_data <- deparse(substitute(x))
+  #df <- Stat_table[,c("method","drug",,"test_data","RMSE","MAE","R2_simp","R2_corr")]
+  df <- Stat_table[,c("method","drug","RMSE","MAE","R2_simp","R2_corr")]
+  name <- paste(outFolder,drug,"_4Stats.csv", sep="",collapse = NULL)
+  write.csv(df,name, quote=FALSE)
+
+  cat(paste(Sys.time(),"Stat_table saved as ",outFolder,"/..._4Stats.csv \n", sep="",collapse = NULL))
+
+#filename = paste("/extraspace/ychen42/Drug_Response/Own_update2.0/Models/",drug,"_preds_from_testFrame.RData", sep="",collapse = NULL)
+#save(preds_from_testFrame, method_list, file=filename)
+
+#cat(paste(Sys.time(),"testFrame pred saved as /extraspace/ychen42/Drug_Response/Own_update2.0/Models/..._preds_from_testFrame.RData\n"))
+
+#return(list(preds_from_trainFrame,preds_from_testFrame,Stat_table))
+}
 
 #====================  End of function "build_stateval" ===============
 
