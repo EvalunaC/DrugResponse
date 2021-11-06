@@ -1,0 +1,7 @@
+setwd("/extraspace/ychen42/Drug_Response/Data/")
+
+GDSC2<-read.csv("GDSC2_IC50_matrix.csv", header=T,row.names=1)
+
+#GDSC2<-read.csv("GDSC2_matrix.csv", header=T,row.names=1)
+possibleDrugs2<-rownames(GDSC2) ##192
+drug_list <- 
