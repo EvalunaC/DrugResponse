@@ -8,7 +8,7 @@ Created on Fri Nov  5 22:20:04 2021
 
 "/extraspace/ychen42/validation-CTRDB/Epirubicin_trainFrame_GDSC2.csv"
 
-import pyreadr
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -24,10 +24,6 @@ import platform
 print(platform.python_version())
 
 """### Importing the training set"""
-drugname = pd.read_csv("/extraspace1/qli12/Data Source/GDSC2/192Drug_list.csv")
-
-"/extraspace1/qli12/Data Source/GDSC2/GDSC2_Frame_NoTrans/"
-
 trainFrame = pd.read_csv("/extraspace/ychen42/validation-CTRDB/Epirubicin_trainFrame_GDSC2.csv")
 
 testFrame = pd.read_csv("/extraspace/ychen42/validation-CTRDB/Epirubicin_testFrame_GDSC2.csv")
@@ -115,6 +111,7 @@ plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.annotate(str(history.history['loss'][-1]), xy = (history.history['loss'][-1], 1),
+             
             xytext = (.5, .5))
 
 #save photo
