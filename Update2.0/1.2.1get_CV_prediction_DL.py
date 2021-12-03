@@ -8,10 +8,7 @@ Created on Fri Nov  5 22:20:04 2021
 
 import pyreadr
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
 import tensorflow as tf
-import tensorflow_addons as tfa
 
 #from sklearn.model_selection import cross_val_score
 from sklearn.metrics import r2_score
@@ -49,6 +46,7 @@ def DL(drug):
     train_file = "/extraspace1/qli12/Data Source/GDSC2/GDSC2_Frame_NoTrans/"+drug+"_trainFrame.RData"
     trainFrame =pyreadr.read_r(train_file)['trainFrame']
     trainFrame.shape
+
     X = trainFrame.iloc[:,1:].values
     y = trainFrame.iloc[:,0].values
 
@@ -103,7 +101,7 @@ def DL(drug):
 #save photo
     predictions = regressor.predict(X_test)
     predictions=np.reshape(predictions, (predictions.shape[0],))
-    output = np.vstack((predictions,y_test,[drug]*predictions.shape[0])).T
+    output = np.vstack((trainFrame.index,predictions,y_test,[drug]*predictions.shape[0])).T
     file = "/extraspace/ychen42/1.2.1.CV_perdiction_DL/"+drug+"_CV_DLpredict.csv"
     np.savetxt(file, output, fmt="%s", delimiter=',')
 
