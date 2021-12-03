@@ -38,8 +38,8 @@ with open('/extraspace1/qli12/Data Source/GDSC2/192Drug_list.csv') as f:
 train_file = "/extraspace1/qli12/Data Source/GDSC2/GDSC2_Frame_NoTrans/"+drugnames+"_trainFrame.RData"
 
 
-    
-    
+
+
 def DL(drug):
     print(i)
     print("=============================")
@@ -50,7 +50,7 @@ def DL(drug):
     X = trainFrame.iloc[:,1:].values
     y = trainFrame.iloc[:,0].values
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, shuffle=False)
 
 
 #Variables
