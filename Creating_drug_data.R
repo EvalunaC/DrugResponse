@@ -1,24 +1,27 @@
-set.seed(1000)
+## TODO run the loop to save all files.
 
-library(caret)
+#set.seed(1000)
+
+#library(caret)
 
 library(pRRophetic)
 library(car)
+library(ridge)
 
-library(glmnet)
-library(dplyr)
-library(magrittr)
-library(MASS)
-library(data.table)
-library(parallel)
-library(boot)
-library(performance)
-library(caret)
-library(kernlab)
-library(robustbase)
-library(mgcv)
+#library(glmnet)
+#library(dplyr)
+#library(magrittr)
+#library(MASS)
+#library(data.table)
+#library(parallel)
+#library(boot)
+#library(performance)
+#library(caret)
+#library(kernlab)
+#library(robustbase)
+#library(mgcv)
 
-library(qrnn)
+#library(qrnn)
 
 
 
@@ -31,11 +34,10 @@ library(qrnn)
 #geneNames <- do.call(cbind, strsplit(tpmDatMat_bc[, "Hybridization.REF"], "|", fixed=TRUE))[1,][-1]
 #rownames(tpmDatMat_bc_tpm) <- geneNames
 #colnames(tpmDatMat_bc_tpm) <- substr(colnames(tpmDatMat_bc_tpm), 1, 28)
-## 改这里
 ##tpmDatMat_bc_tpm_logged <- log((tpmDatMat_bc_tpm*1000000)+1)
 setwd("/extraspace/ychen42/Drug_Response/Data/")
-tpmDatMat_bc_tpm_logged <- load("TCGA_Log2_New.RData")
-
+load("TCGA_Log2_New.RData")
+tpmDatMat_bc_tpm_logged <- TCGA_Log2_New
 CCLE_2018<-read.delim("CCLE_RNAseq_genes_rpkm_20180929.gct.txt") ##56202*1019
 CCLE_2018<-CCLE_2018[,-1]
 
@@ -43,17 +45,24 @@ CCLE_2018_mat<-as.matrix(CCLE_2018)
 rownames(CCLE_2018_mat)<-GeneNameCCLE<-CCLE_2018_mat[,1]
 CCLE_2018_mat<-apply(CCLE_2018_mat[,-1],2,as.numeric)
 rownames(CCLE_2018_mat)<-GeneNameCCLE
-CCLE_2018_mat[1:3,1:3]
+
 colnames(CCLE_2018_mat) <- gsub("^X", "",  colnames(CCLE_2018_mat))
-cell_CCLE<- do.call(cbind, strsplit(colnames(CCLE_2018_mat), "_", fixed=TRUE))[1,] ## 1019
+B1<- do.call(cbind, strsplit(colnames(CCLE_2018_mat), "_", fixed=TRUE))[1,] ## 1019
+B2<-gsub("[[:punct:]]", " ", B1)
+B3<-gsub("[[:space:]]", "", B2)
+cell_CCLE<-toupper(B3)
 colnames(CCLE_2018_mat)<-cell_CCLE
+
+CCLE_2018_mat[1:3,1:3]
 
 GDSC2<-read.csv("GDSC2_IC50_matrix.csv", header=T,row.names=1)
 
 #GDSC2<-read.csv("GDSC2_matrix.csv", header=T,row.names=1)
 possibleDrugs2<-rownames(GDSC2) ##192
-A2<-gsub("[[:punct:]]", " ", colnames(GDSC2))
-colnames(GDSC2)<-gsub("[[:space:]]", "", A2) ##809
+A1<-gsub("[[:punct:]]", " ", colnames(GDSC2))
+A2<-gsub("[[:space:]]", "", A1) ##809
+A3 <- gsub("^X", "",  A2)
+colnames(GDSC2)<-toupper(A3)
 
 getCGPinfo_New<-function(drug){whichNas <- which(is.na(GDSC2[drug,]))
 #drug_IC50<-GDSC_AUC_matrix[drug,][-whichNas]
@@ -125,9 +134,19 @@ if (powerTransformPhenotype) {
 }
 
 trainFrame <- data.frame(Resp = trainingPtype, t(homData$train[keepRows,]))
-return(trainFrame)  }
+testFrame <- data.frame(t(homData$test[keepRows, ]))
+return(list(trainFrame,testFrame))  }
 
+#============= Save 192 drugs trainFrame and testFrame =======================
 
+for (i in 1:length(possibleDrugs2)){
+  drug_data <- getDrugData(possibleDrugs2[i])
+  trainFrame <- drug_data[[1]]
+  testFrame <- drug_data[[2]]
+  
+  trainFile <- paste("/extraspace/ychen42/Drug_Response/Data/Drug192_TrainTest/",possibleDrugs2[i],"_trainFrame.RData", sep="")
+  testFile <- paste("/extraspace/ychen42/Drug_Response/Data/Drug192_TrainTest/",possibleDrugs2[i],"_testFrame.RData", sep="")
 
-#input_medication_name <- "Vinblastine"
-#input_medication_name <- "Camptothecin"
+  save(trainFrame,file=trainFile)
+  save(testFrame,file=testFile)
+}
